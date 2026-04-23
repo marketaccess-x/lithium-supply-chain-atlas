@@ -1,0 +1,457 @@
+{
+  "__metadata": {
+    "name": "Lithium Supply Chain Atlas — Policy Overlay Dataset",
+    "version": "v1.0 (post-verification)",
+    "last_updated": "2026-04-22",
+    "companion_files": ["nodes_v0.2.json", "flows_v0.2.json"],
+    "purpose": "Defines the four stackable policy overlays that encode regulatory exposure across the supply chain. Each overlay can be toggled independently. Overlays modify flow-line color/pattern and add node-level markers. Designed to be applied on top of the base volume-weighted flow rendering without altering node positions or flow geometry.",
+    "design_principle": "Policy overlays reveal structural exposure that tonnage alone cannot. The atlas's distinctive analytical contribution is showing that the same flow can be legal at origin but blocked at destination (blocked-once-refined), or that physically diversified but Chinese-owned operations are structurally equivalent to Chinese domestic production for US credit purposes. Overlays surface this layered reality."
+  },
+
+  "overlays": [
+
+    {
+      "id": "us_pfe_regime",
+      "display_name": "US PFE Regime (OBBBA + IRA)",
+      "short_label": "US PFE",
+      "description": "Prohibited Foreign Entity rules under the One Big Beautiful Bill Act (July 2025) and IRS Notice 2026-15 (Feb 2026). Governs eligibility for §30D (terminated Sep 30 2025), §45X, §45Y, §48E tax credits. Two-layer restriction: entity-level PFE test (SFE + FIE) and project-level Material Assistance Cost Ratio (MACR).",
+      "overlay_type": "flow_color",
+      "primary_color": "#4a7db8",
+      "state_rendering": {
+        "qualifying": {
+          "description": "Flow contributes to US credit eligibility. Source is US FTA partner or critical-minerals-agreement partner; no PFE ownership issues at source or destination.",
+          "style": "solid line, full color #4a7db8",
+          "opacity": 1.0,
+          "tooltip_prefix": "PFE-QUALIFYING"
+        },
+        "blocked": {
+          "description": "Flow disqualified from contributing to US §45X / §45Y / §48E credits. Origin or destination involves PFE (Chinese-refined material or Chinese-owned entity).",
+          "style": "dashed line, full color #4a7db8",
+          "dash_pattern": "8,4",
+          "opacity": 1.0,
+          "tooltip_prefix": "PFE-BLOCKED"
+        },
+        "blocked_once_refined": {
+          "description": "Flow is legal at origin (e.g., Australian spodumene, FTA-partner) but downstream refining step in China or Chinese-owned entity renders resulting chemicals PFE-blocked for US credits.",
+          "style": "gradient from neutral grey at source (#7a8599) to policy color at destination (#4a7db8)",
+          "gradient_stops": [
+            {"position": 0.0, "color": "#7a8599"},
+            {"position": 1.0, "color": "#4a7db8"}
+          ],
+          "opacity": 1.0,
+          "tooltip_prefix": "BLOCKED DOWNSTREAM"
+        },
+        "ambiguous": {
+          "description": "Classification depends on interpretation of PFE rules not yet operationalized. Deals proceed with indemnity packages and de-FEOC covenants.",
+          "style": "dotted line, full color #4a7db8",
+          "dash_pattern": "2,3",
+          "opacity": 0.85,
+          "tooltip_prefix": "PFE-AMBIGUOUS"
+        },
+        "pending_regs": {
+          "description": "Statutorily affected but operational test not yet defined. Treasury regulations expected late 2026 per Notice 2026-15 schedule (comment period closed March 30 2026).",
+          "style": "dashed line with question-mark marker at midpoint, color #4a7db8 at 70% opacity",
+          "dash_pattern": "5,5",
+          "opacity": 0.7,
+          "marker": "?",
+          "tooltip_prefix": "PFE-PENDING REGS"
+        }
+      },
+      "tooltip_explainer": "The US Prohibited Foreign Entity (PFE) regime combines two tests. First, an entity-level test: a Specified Foreign Entity (SFE) is tied to China, Russia, Iran, or North Korea, or is 50%+ owned by a covered-nation entity. A Foreign-Influenced Entity (FIE) is triggered by 25% single-owner or 40% aggregate covered-nation ownership, 15%+ covered-nation debt attribution, or 'effective control' through contracts. Together SFE + FIE = PFE. Second, a project-level test: the Material Assistance Cost Ratio (MACR) measures non-PFE content. Thresholds escalate from 40-55% in 2026 to 60-85% by 2030 across §45Y, §48E, and §45X. A single failure disqualifies the entire credit. For lithium specifically: Chinese-refined chemicals in US-bound batteries disqualify the battery from §45X. Chinese-owned refining outside China (Tianqi Kwinana, BTR Indonesia, Chengxin Indonesia) is also blocked regardless of geography. Rio Tinto Arcadium remains ambiguous pending FIE aggregate-ownership guidance because Chinalco holds 14.99% of Rio Tinto. The §48E investment credit carries a 10-year recapture risk: a single effective-control payment in year 7 wipes the entire credit. Source: OBBBA Public Law 119-21 (July 2025); IRS Notice 2026-15 (Feb 12 2026).",
+      "legend_notes": [
+        "Solid line = flow fully clears PFE tests",
+        "Dashed line = flow blocked for US credit contribution",
+        "Gradient (grey→blue) = legal at origin, blocked downstream",
+        "Dotted line = ambiguous pending Treasury guidance",
+        "Dashed with '?' = statutorily triggered but operational tests pending"
+      ]
+    },
+
+    {
+      "id": "host_state_controls",
+      "display_name": "Host-State Resource Controls",
+      "short_label": "Host State",
+      "description": "Export restrictions, state-partnership mandates, and resource-nationalism regimes imposed by producing jurisdictions. Covers Chile's National Lithium Strategy, Zimbabwe's escalating export bans, Namibia's export controls, Indonesia's raw material bans.",
+      "overlay_type": "flow_color",
+      "primary_color": "#c49656",
+      "state_rendering": {
+        "active": {
+          "description": "Flow subject to host-state control measures (export licensing, state-partnership mandates, tiered export taxes).",
+          "style": "solid line, color #c49656",
+          "opacity": 0.85,
+          "tooltip_prefix": "HOST-STATE CONTROLLED"
+        },
+        "escalating": {
+          "description": "Host-state regime is actively tightening. Applies to Zimbabwe as of April 2026: the Dec 2022 raw ore ban was extended to concentrate in Feb 2026, modified to quota system in April 2026.",
+          "style": "solid line with amber pulse animation, color #c49656",
+          "opacity": 1.0,
+          "animation": "pulse-2s",
+          "tooltip_prefix": "HOST-STATE ESCALATING"
+        }
+      },
+      "tooltip_explainer": "Host-state controls are resource-nationalism measures imposed by producing countries to capture more of the value chain domestically. Chile requires state majority in strategically significant lithium projects under its 2023 National Lithium Strategy; the Codelco-SQM NovAndino Litio JV (operational Dec 27 2025) is the institutional expression of this. Zimbabwe has escalated from a 2022 raw ore export ban to a February 2026 immediate suspension of all concentrate exports, modified to a quota system with processing-commitment conditions in April 2026. The 2026 tiered export tax (10% raw ore, 10% concentrate, 0% lithium sulphate) explicitly incentivizes downstream processing onshore. Namibia introduced similar controls in June 2023. These regimes typically do NOT disqualify material from US 30D/PFE eligibility — Chile is an FTA partner, and export controls apply at origin not destination.",
+      "legend_notes": [
+        "Amber tone = host-state export restriction or state-partnership mandate",
+        "Pulsing amber = regime actively tightening (Zimbabwe 2022-2026 is the reference case)"
+      ]
+    },
+
+    {
+      "id": "eu_crma",
+      "display_name": "EU Critical Raw Materials Act",
+      "short_label": "EU CRMA",
+      "description": "EU Critical Raw Materials Act (March 2024) benchmarks and third-country ceilings. Targets 10% domestic extraction, 40% processing, 25% recycling, and 65% maximum from any single third country by 2030.",
+      "overlay_type": "flow_color",
+      "primary_color": "#5e9474",
+      "state_rendering": {
+        "strategic_project": {
+          "description": "Flow terminates in EU operation designated as a CRMA Strategic Project (expedited permitting and financing access).",
+          "style": "solid line, color #5e9474",
+          "opacity": 0.85,
+          "tooltip_prefix": "CRMA STRATEGIC"
+        },
+        "subject_to_65pct_ceiling": {
+          "description": "Flow terminates in EU processing/cell operation and contributes to compliance with CRMA 65% third-country ceiling from 2030.",
+          "style": "solid line, color #5e9474 at 70% opacity",
+          "opacity": 0.7,
+          "tooltip_prefix": "CRMA 65% CEILING"
+        },
+        "demand_side_undermined": {
+          "description": "Flow illustrates CRMA vulnerability from demand-side contraction. Applies to Chile→Belgium flow after Umicore halved 2025 cathode production.",
+          "style": "solid line, color #5e9474 at 60% opacity, with down-arrow marker",
+          "opacity": 0.6,
+          "marker": "↓",
+          "tooltip_prefix": "CRMA UNDER PRESSURE"
+        }
+      },
+      "tooltip_explainer": "The EU's Critical Raw Materials Act (CRMA, adopted March 2024) sets four benchmarks for lithium and other strategic raw materials by 2030: 10% of EU annual consumption from domestic extraction, 40% processed within EU, 25% from recycled sources, and no more than 65% of any single material from one third country. The Act also designates Strategic Projects (e.g., AMG Bitterfeld lithium hydroxide refinery, Savannah Barroso mine Portugal, Rock Tech Guben) for expedited permitting. Verification finding: CRMA is failing from the demand side as much as the supply side — Umicore's CORE strategy (Feb 2025) halved 2025 cathode production, causing Chile→Belgium lithium flows to fall 67% YoY Q1 2025. Northvolt liquidated March 2025. ACC Kaiserslautern and Termoli gigafactories shelved Feb 2026. The European battery cell capacity CRMA was designed to feed is contracting, not expanding. Source: Regulation (EU) 2024/1252.",
+      "legend_notes": [
+        "Green tone = CRMA-relevant flow",
+        "Solid green = CRMA Strategic Project destination",
+        "Muted green = subject to 65% third-country ceiling",
+        "Green with ↓ marker = flow illustrates demand-side CRMA vulnerability"
+      ]
+    },
+
+    {
+      "id": "chinese_ownership_node_marker",
+      "display_name": "Chinese Ownership / Control",
+      "short_label": "Chinese Control",
+      "description": "Node-marker overlay (not flow-color). Tags every node majority-owned or controlled by a Chinese entity, including operations outside China. Reflects that Chinese ownership contaminates PFE eligibility regardless of physical location per Query 8 / Notice 2026-15.",
+      "overlay_type": "node_marker",
+      "primary_color": "#8a6ea8",
+      "marker_style": {
+        "shape": "concentric ring around node",
+        "color": "#8a6ea8",
+        "ring_thickness_px": 2.5,
+        "dash_pattern": "4,2",
+        "opacity": 0.85
+      },
+      "expanded_scope": "Covers TWO related regulatory dimensions that both depend on Chinese entity control: (1) China's own export controls on refining technology (Jan 2024) and battery supply chain technology (Nov 2025) apply to Chinese entities and their subsidiaries; (2) US OBBBA PFE rules classify output from Chinese-owned entities as blocked regardless of geography. Both rest on the same ownership test, so a single node-marker captures both.",
+      "node_classifications": {
+        "marked_chinese_owned": [
+          "CHN_mine",
+          "CHN_ref",
+          "CHN_cell",
+          "ZWE",
+          "NAM",
+          "AUS_ref_kwinana"
+        ],
+        "marked_partial_chinese_influence": [
+          "IDN_cell",
+          "HUN_cell"
+        ],
+        "notes_per_node": {
+          "CHN_mine": "Chinese domestic mining, fully Chinese-controlled.",
+          "CHN_ref": "Chinese domestic refining — 70% of global capacity, subject to Nov 2025 technology export controls.",
+          "CHN_cell": "Chinese domestic cell manufacturing — 85% of global capacity, subject to Nov 2025 battery supply chain export controls.",
+          "ZWE": "All major operations Chinese-controlled (Bikita=Sinomine, Arcadia=Huayou, Sabi Star=Chengxin). EXCEPT Zulu (Premier African Minerals UK-listed, Canmax minority equity). Regime is escalating — concentrate ban Feb 2026 + quota system April 2026 forcing further downstream processing on Chinese operators.",
+          "NAM": "Xinfeng Investments (Chinese) operates largest Namibian lithium capacity.",
+          "AUS_ref_kwinana": "Tianqi (51%) + IGO (49%). Majority Chinese ownership = SFE under OBBBA. Blocked for US credit contribution regardless of Australian geography. IGO has publicly said 'no path forward' under current ownership structure. The single most consequential PFE reclassification in the atlas.",
+          "IDN_cell": "Indonesia cell manufacturing is mixed. Hyundai-LGES JV portion is PFE-qualifying. IWIP (Indonesia Weda Bay) and CATL Karawang operations are Chinese-controlled → blocked despite non-China geography. Atlas tooltip should disaggregate.",
+          "HUN_cell": "Hungary cell cluster includes CATL Debrecen (Chinese operator) alongside Samsung SDI Göd and SK On Komárom (Korean). Partial marker reflects that Chinese-affiliated output has PFE exposure downstream, while Korean cell output remains PFE-clean."
+        }
+      },
+      "tooltip_explainer": "This marker flags majority-Chinese-owned or Chinese-controlled nodes regardless of physical location. Its significance is structural: under OBBBA Section 7701(a)(51), a 'Specified Foreign Entity' includes any entity 50%+ owned by a covered-nation entity (China). Per IRS Notice 2026-15 (Feb 12 2026), output from SFE-classified operations is disqualified from US §45X / §45Y / §48E credit contribution regardless of where the plant physically sits. This means Chinese operators' 'China+1' diversification strategy — moving operations to Indonesia, Morocco, Zimbabwe — does NOT clear US credit tests. Tianqi Kwinana (Australian geography, Chinese ownership) is structurally equivalent to a Chinese domestic refinery for US credit purposes. The same principle applies to BTR's Indonesian and Moroccan anode plants, and to Chinese-controlled portions of Indonesian lithium-chemical capacity. Chinese parent boards have so far refused to dilute equity below the 25% single-owner / 40% aggregate thresholds that would clear the test. Source: OBBBA §7701(a)(51); IRS Notice 2026-15.",
+      "legend_notes": [
+        "Dashed purple ring around node = majority Chinese ownership/control",
+        "Partial ring = mixed Chinese/non-Chinese operators at the same geographic location",
+        "Applies regardless of physical country — geography does not cleanse the ownership test"
+      ]
+    }
+
+  ],
+
+  "flow_tagging": {
+    "description": "Per-flow policy tagging applied to flows_v0.2.json flow IDs. Each flow can have one or more overlay associations. The primary policy state drives the flow-line rendering; secondary tags appear in tooltip.",
+
+    "tags": [
+
+      {
+        "flow_id": "AUS_CHN_ore",
+        "primary_state": "blocked_once_refined",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "The defining flow of the global lithium system. Australia → China ore shipment is legal and FTA-origin, but once refined in China the resulting chemicals are PFE-blocked for US credit contribution. This is the 'blocked-once-refined' pattern — the flow itself is legal, the downstream product is not. 94% of Australian spodumene exports go to China but Australia's share of Chinese inbound fell to 50.1% (Jan-Sep 2025) from 64.3% (2024) as African supply rose."
+      },
+
+      {
+        "flow_id": "AUS_KWINANA_ore",
+        "primary_state": "blocked",
+        "overlays": ["us_pfe_regime", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "CRITICAL RECLASSIFICATION. Flow is itself an intra-Australia movement from Greenbushes mine to Kwinana refinery. But Kwinana is 51% Tianqi-owned — classified SFE under OBBBA regardless of Australian FTA geography. Output does NOT count toward US MACR compliance. IGO has publicly said 'no path forward.' Physical diversification without equity dilution is insufficient."
+      },
+
+      {
+        "flow_id": "AUS_KEMERTON_ore",
+        "primary_state": "qualifying",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "Intra-Australia mining→refining flow to Albemarle Kemerton. Albemarle is US-owned, Australian geography, PFE-qualifying throughout. However operational reality: Kemerton progressively idled 2024-2025 (Trains 2/3/4 shelved, Train 1 subsequently idled). Flow volume well below nameplate."
+      },
+
+      {
+        "flow_id": "AUS_IDN_ore",
+        "primary_state": "blocked_once_refined",
+        "overlays": ["us_pfe_regime", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "Emerging flow. Indonesia overtook Korea as #2 Australian spodumene destination H1 2025. Chengxin Lithium (Chinese) processes imported hard rock in Indonesia. Classic 'China+1' case — Chinese-operated Indonesian processing is structurally blocked for US credit despite non-China geography."
+      },
+
+      {
+        "flow_id": "AUS_GWANGYANG_ore",
+        "primary_state": "qualifying",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "Pilbara Minerals → POSCO Gwangyang. Korea-US FTA qualifying. Operational reality: Gwangyang produced only ~8 kt LiOH in 2024 vs 43 kt/y nameplate. Ramp gap is why Korean retreat from Chilean carbonate isn't yet compensated by Korean refining output."
+      },
+
+      {
+        "flow_id": "CHL_CHN_chem",
+        "primary_state": "blocked",
+        "secondary_states": ["host_state_controls"],
+        "overlays": ["us_pfe_regime", "host_state_controls"],
+        "tooltip_analytical_note": "The largest single refining→cells cross-border flow. 186 kt LCE (71% of Chile's 2024 exports by value). Chilean state-partnership mandate applies at origin but flow remains qualifying as a Chile→X path — what renders it 'blocked' is that X happens to be Chinese cell production, disqualifying the resulting battery from US credits. Important analytical nuance: this flow is the visible part of China's 241 kt LCE refined-chemical import dependence."
+      },
+
+      {
+        "flow_id": "CHL_KOR_chem",
+        "primary_state": "qualifying",
+        "secondary_states": ["host_state_controls"],
+        "overlays": ["us_pfe_regime", "host_state_controls"],
+        "tooltip_analytical_note": "Korea retreat from Chile — share fell 28%→15% in 2024, value -76%. Volume corrected to 40 kt LCE. PFE-qualifying throughout (Korea-US FTA). But declining, with the intended substitution (Australian spodumene → Korean refining via POSCO) not yet ramped."
+      },
+
+      {
+        "flow_id": "CHL_USA_chem",
+        "primary_state": "qualifying",
+        "secondary_states": ["host_state_controls"],
+        "overlays": ["us_pfe_regime", "host_state_controls"],
+        "tooltip_analytical_note": "Chile overtook Argentina as #1 US lithium source in 2021-24 per USGS MCS 2026 (54% vs 43%). Fully PFE-qualifying via US-Chile FTA. The shift strengthens US 30D compliance posture."
+      },
+
+      {
+        "flow_id": "CHL_JPN_chem",
+        "primary_state": "qualifying",
+        "secondary_states": ["host_state_controls"],
+        "overlays": ["us_pfe_regime", "host_state_controls"],
+        "tooltip_analytical_note": "Steady flow to Japanese chemical sector. Japan-US no FTA but ally — classification ultimately ambiguous in strict PFE terms, but feeding the Japanese cell sector rather than US-bound output."
+      },
+
+      {
+        "flow_id": "CHL_BEL_chem",
+        "primary_state": "demand_side_undermined",
+        "secondary_states": ["host_state_controls"],
+        "overlays": ["eu_crma", "host_state_controls"],
+        "tooltip_analytical_note": "EU CRMA undermined from the demand side. Chile → Belgium flow down 67% YoY Q1 2025 after Umicore halved CAM production under its CORE strategy. The European cathode processing capacity CRMA was designed to feed is contracting, not expanding. Destination rendered as DEU in atlas but actual flow was Belgium-Germany for CAM processing."
+      },
+
+      {
+        "flow_id": "ARG_USA_chem",
+        "primary_state": "ambiguous",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "MAJOR CORRECTION. Volume revised from 48.8 to 5.9 kt LCE (7x reduction). Policy state revised from qualifying to ambiguous per Query 8: Rio Tinto acquired Arcadium March 2025, Chinalco owns 14.99% of Rio Tinto — below 25% single-owner FIE trigger, but vulnerable if Treasury adopts aggregate-ownership test. Deals proceeding with indemnity packages pending regulatory clarity."
+      },
+
+      {
+        "flow_id": "ARG_CHN_chem",
+        "primary_state": "blocked",
+        "overlays": ["us_pfe_regime", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "Ganfeng Cauchari-Olaroz and Mariana operations ship chemicals to Chinese parent. Part of China's 241 kt LCE refined-chemical imports. Blocked for downstream US credit contribution."
+      },
+
+      {
+        "flow_id": "ARG_KOR_chem",
+        "primary_state": "qualifying",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "POSCO-Salta and Allkem offtake flows feeding Korean cathode sector."
+      },
+
+      {
+        "flow_id": "ZWE_CHN_ore",
+        "primary_state": "blocked_once_refined",
+        "secondary_states": ["escalating"],
+        "overlays": ["us_pfe_regime", "host_state_controls", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "The Zimbabwe paradox intensified. Chinese operators mine domestically (Bikita/Arcadia/Sabi Star Chinese-owned; Zulu is UK Premier African Minerals). Zimbabwe regime escalating in real time: Dec 2022 raw ore ban → June 2025 concentrate ban announcement → Feb 25 2026 immediate suspension → Apr 2026 quota system. 2026 tiered export tax explicitly favors downstream (10% raw, 10% concentrate, 0% sulphate). Chinese operators forced further down the value chain. Triple-overlaid: blocked-once-refined for US credit purposes, host-state escalating, Chinese-owned node marker at origin."
+      },
+
+      {
+        "flow_id": "BRA_CHN_ore",
+        "primary_state": "blocked_once_refined",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "Sigma Lithium concentrate predominantly to China. Becomes PFE-blocked once refined. 2024 volume nearly doubled from 2023."
+      },
+
+      {
+        "flow_id": "BRA_USA_ore",
+        "primary_state": "pending_regs",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "Sigma-LGES MOU. Brazil has no US FTA. 30D qualifying status depends on MACR threshold interpretation not yet operationalized. Classified 'pending_regs' per Notice 2026-15 timeline — Treasury's PFE cost tables expected by December 31, 2026."
+      },
+
+      {
+        "flow_id": "CAN_BECANCOUR_ore",
+        "primary_state": "qualifying",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "Fully USMCA-qualifying domestic Canadian flow. Nemaska Lithium Whabouchi mine → Bécancour hydroxide plant. Canada-US FTA clean throughout."
+      },
+
+      {
+        "flow_id": "USA_USA_ref",
+        "primary_state": "qualifying",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "Small but fully PFE-clean. Albemarle Silver Peak domestic brine → US chemical production. USGS withholds precise figures."
+      },
+
+      {
+        "flow_id": "NAM_CHN_ore",
+        "primary_state": "blocked_once_refined",
+        "overlays": ["us_pfe_regime", "host_state_controls", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "Similar structural pattern to Zimbabwe. Xinfeng (Chinese) operates largest Namibian capacity. Triple-overlaid: blocked-once-refined, host-state controls (June 2023 export controls), Chinese ownership at origin."
+      },
+
+      {
+        "flow_id": "CHN_CHN_chem",
+        "primary_state": "blocked",
+        "overlays": ["us_pfe_regime", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "THE LARGEST SINGLE FLOW. 580-720 kt LCE range (central 650). 4x larger than next-biggest. Critical context: China was net importer of refined lithium in 2024 despite 70% refining share. The chokepoint is processing concentration, not self-sufficiency. Render prominence matches analytical weight."
+      },
+
+      {
+        "flow_id": "CHN_KOR_chem",
+        "primary_state": "blocked_once_refined",
+        "overlays": ["us_pfe_regime", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "Korean cell makers source significant share from China despite domestic POSCO ramp efforts. Affected by China's Nov 2025 battery technology export controls (technical transfer more than volume)."
+      },
+
+      {
+        "flow_id": "CHN_JPN_chem",
+        "primary_state": "blocked_once_refined",
+        "overlays": ["us_pfe_regime", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "Chinese chemicals feeding Japanese NMC chemistry production."
+      },
+
+      {
+        "flow_id": "CHN_EU_chem",
+        "primary_state": "subject_to_65pct_ceiling",
+        "secondary_states": ["blocked_once_refined"],
+        "overlays": ["us_pfe_regime", "eu_crma", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "Chinese chemicals flowing to EU cell plants (Hungary as proxy destination — CATL Debrecen + Samsung SDI Göd + SK On). CRMA 65% third-country ceiling creates long-term pressure from 2030. CATL Debrecen begins mass cell production early 2026."
+      },
+
+      {
+        "flow_id": "CHN_USA_chem",
+        "primary_state": "blocked",
+        "overlays": ["us_pfe_regime", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "The defining blocked flow. Chinese-refined lithium in US-credit-eligible batteries is disqualified. Volume has dropped since 2023. Ford/CATL Marshall licensing (survived OBBBA via 'Ford controls; CATL merely trains' distinction) is the notable carve-out, but remains politically and legally fragile."
+      },
+
+      {
+        "flow_id": "KOR_KOR_chem",
+        "primary_state": "qualifying",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "POSCO Gwangyang → Korean cell makers. Qualifying throughout. Volume small (6 kt LCE) reflecting POSCO ramp reality rather than nameplate capacity."
+      },
+
+      {
+        "flow_id": "DEU_DEU_chem",
+        "primary_state": "strategic_project",
+        "overlays": ["eu_crma"],
+        "tooltip_analytical_note": "AMG Bitterfeld Module 1 → German cell plants. CRMA Strategic Project. Module 1 commissioned Sept 2024 with limited 2024 output. Rock Tech Guben converter under construction."
+      },
+
+      {
+        "flow_id": "JPN_JPN_chem",
+        "primary_state": "ambiguous",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "Naraha + Toyotsu hydroxide → Japanese cells. Japan-US no FTA — PFE classification ambiguous. Flow is largely ally-loop (Japan refining, Japan cells) rather than US-bound."
+      },
+
+      {
+        "flow_id": "USA_USA_cells",
+        "primary_state": "qualifying",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "US domestic refining → US cell manufacturing. Fully PFE-qualifying. Growing through 2025 as StarPlus Indiana Plant 1 ramps."
+      },
+
+      {
+        "flow_id": "USA_INDIANA_cells",
+        "primary_state": "qualifying",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "US domestic refining → StarPlus Indiana Plant 1 (Stellantis-Samsung SDI JV). PFE-qualifying template: Korean cell technology + US market access + non-Chinese ownership throughout."
+      },
+
+      {
+        "flow_id": "CAN_CELLS_chem",
+        "primary_state": "qualifying",
+        "overlays": ["us_pfe_regime"],
+        "tooltip_analytical_note": "Nemaska Bécancour → NextStar Windsor. Fully USMCA-qualifying. NextStar now serving both EV cell and BESS markets."
+      },
+
+      {
+        "flow_id": "CHN_CAN_chem",
+        "primary_state": "blocked",
+        "overlays": ["us_pfe_regime", "chinese_ownership_node_marker"],
+        "tooltip_analytical_note": "Residual Chinese chemicals flow to NextStar Windsor. Small volume, PFE-blocked for §45X/§30D eligibility. Declining as Canada→Bécancour vertical integration ramps."
+      }
+
+    ]
+  },
+
+  "node_tagging": {
+    "description": "Per-node overlay tagging. Used for the Chinese ownership node-marker overlay primarily, plus annotations for tier-specific regulatory exposure.",
+    "tags": [
+      {"node_id": "AUS_ref_kwinana", "chinese_ownership_marker": true, "pfe_status": "blocked", "notes": "51% Tianqi. SFE under OBBBA. Blocked for US credit contribution."},
+      {"node_id": "CHN_ref", "chinese_ownership_marker": true, "export_control_status": "Jan 2024 refining tech controls apply", "notes": "70% of global refining. Net importer of refined chemicals in 2024."},
+      {"node_id": "CHN_cell", "chinese_ownership_marker": true, "export_control_status": "Nov 2025 battery supply chain controls apply", "notes": "85% of global cell manufacturing. Storage-grade output approaching 550 GWh end-2025."},
+      {"node_id": "CHN_mine", "chinese_ownership_marker": true, "notes": "Domestic Chinese lithium mining."},
+      {"node_id": "ZWE", "chinese_ownership_marker": true, "host_state_status": "escalating", "notes": "All major operators Chinese except Zulu (UK). Feb/April 2026 regime tightening."},
+      {"node_id": "NAM", "chinese_ownership_marker": true, "host_state_status": "active", "notes": "Xinfeng (Chinese) operates largest capacity. June 2023 export controls."},
+      {"node_id": "IDN_cell", "chinese_ownership_marker": "partial", "pfe_status": "mixed", "notes": "Hyundai-LGES JV qualifying; IWIP + CATL Karawang Chinese-controlled and blocked."},
+      {"node_id": "HUN_cell", "chinese_ownership_marker": "partial", "notes": "Mixed cluster: Samsung SDI + SK On (Korean, qualifying) + CATL Debrecen (Chinese, blocked for US-bound)."},
+      {"node_id": "CHL_ref", "host_state_status": "active", "notes": "National Lithium Strategy 2023. NovAndino Litio JV operational Dec 27 2025."},
+      {"node_id": "CHL", "host_state_status": "active", "notes": "State partnership model. Kast election Dec 14 2025 may reshape strategy."},
+      {"node_id": "DEU_ref_bitterfeld", "crma_status": "strategic_project", "notes": "AMG Bitterfeld is EU CRMA Strategic Project. Module 1 operational Sept 2024."},
+      {"node_id": "USA_cell", "pfe_status": "qualifying_but_shrinking", "notes": "$32bn pipeline killed 2025 post-OBBBA. BESS pivot preserving utilization."},
+      {"node_id": "SWE_cell", "status": "failed", "notes": "Northvolt Chapter 11 Nov 2024, Swedish liquidation March 2025, Skellefteå discontinued May 2025. Kept as narrative node at 0 GWh — represents European Battery Alliance failure."},
+      {"node_id": "FRA_cell", "status": "consolidated", "notes": "ACC Kaiserslautern + Termoli shelved Feb 2026. Billy-Berclau/Douvrin only."}
+    ]
+  },
+
+  "visual_stacking_rules": {
+    "description": "How multiple overlays interact when toggled simultaneously",
+    "rules": [
+      "Overlay toggles are independent — each can be on/off independently.",
+      "When multiple flow-color overlays are on, flow takes color of highest-priority applicable state. Priority order: blocked > blocked_once_refined > ambiguous > pending_regs > qualifying (for US PFE); escalating > active (for host-state); strategic_project > subject_to_65pct_ceiling > demand_side_undermined (for EU CRMA).",
+      "When US PFE and EU CRMA both apply to the same flow, the atlas shows US PFE as primary and CRMA as secondary tooltip annotation.",
+      "The Chinese ownership node-marker is independent of flow-color overlays — it renders as a ring around the node regardless of which flow overlays are on.",
+      "Default atlas state (no overlays toggled): flows render in neutral grey, volume-weighted. Overlays are explicitly opt-in.",
+      "When a user hovers on a flow with multiple overlays active, tooltip lists all applicable overlay states with analytical notes from this JSON."
+    ]
+  },
+
+  "__build_notes_for_atlas": [
+    "The gradient treatment for 'blocked_once_refined' flows is the atlas's most distinctive visual vocabulary. Needs clear legend explanation.",
+    "The 'pending_regs' state (dashed + ? marker) is novel — designed to signal that regulatory boundaries are genuinely unresolved, not just uncertain.",
+    "Node-marker overlay uses dashed ring rather than solid to avoid competing with primary node circle; 2.5px thickness + 4,2 dash pattern tested for visibility on dark theme.",
+    "For Ford/CATL Michigan licensing arrangement: not rendered as flow, but should appear as an annotation on USA_cell node tooltip explaining the precedent-setting licensing-vs-effective-control distinction.",
+    "For the 10-year §48E recapture risk (Finding #10): doesn't map to a flow or node directly but belongs in the US PFE overlay tooltip_explainer (already included).",
+    "Atlas should include an explicit regulatory timeline sidebar when US PFE overlay is active: Notice 2026-15 issued Feb 12 2026 / comment period closed March 30 2026 / proposed regs expected mid-late 2026 / PFE cost tables due Dec 31 2026 / MACR thresholds rise every January 1."
+  ]
+}

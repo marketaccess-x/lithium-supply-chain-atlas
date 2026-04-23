@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lithium Supply Chain Atlas | Market Access X</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<style>
+  :root {
+    --bg:          #0a0f1c;
+    --bg2:         #0d1526;
+    --bg3:         #142033;
+    --bg-panel:    #0f1828;
+    --border:      rgba(120,150,200,0.15);
+    --border2:     rgba(140,170,220,0.25);
+    --border3:     rgba(160,190,230,0.4);
+    --text:        #c5cfde;
+    --text-dim:    #6b7a8e;
+    --text-bright: #e8eef7;
+    --mono:        'IBM Plex Mono', monospace;
+    --sans:        'IBM Plex Sans', sans-serif;
+
+    /* Sphere + graticule (navy) */
+    --sphere-fill:   #0f1a2e;
+    --sphere-glow:   rgba(74,125,184,0.15);
+    --graticule:     rgba(120,150,200,0.08);
+    --country-fill:  #162238;
+    --country-stroke:#1e2c44;
+
+    /* Tier node colors (ring-stack) */
+    --tier-mining:    #b06dcc;  /* purple */
+    --tier-refining:  #4a9eca;  /* blue */
+    --tier-cells:     #3aaa8f;  /* teal/green */
+    --tier-empty:     #3d4a5f;  /* dimmed for empty tier slot */
+
+    /* Policy overlay colors */
+    --c-pfe:          #4a7db8;
+    --c-host:         #c49656;
+    --c-crma:         #5e9474;
+    --c-chinese:      #8a6ea8;
+
+    /* Policy flow states */
+    --c-qualifying:   #4a7db8;
+    --c-blocked:      #4a7db8;
+    --c-ambiguous:    #4a7db8;
+    --c-pending:      #4a7db8;
+    --c-neutral:      #7a8599;
+
+    /* Tooltip */
+    --tt-bg:       rgba(10,15,28,0.97);
+    --tt-border:   rgba(74,125,184,0.35);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .header-left h1 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-bright);
+    letter-spacing: 0.02em;
+  }
+  .header-left h1 span { color: #6ab0e5; }
+  .header-left p {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    margin-top: 1px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-tag {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    border: 1px solid var(--border2);
+    padding: 3px 9px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(74,125,184,0.12);
+    border: 1px solid rgba(74,125,184,0.4);
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #6ab0e5;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--sans);
+  }
+  .header-btn:hover {
+    background: rgba(74,125,184,0.22);
+    border-color: rgba(74,125,184,0.65);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    height: calc(100vh - 50px);
+    gap: 0;
+  }
+
+  /* ── SIDE PANELS ── */
+  .panel {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 18px 16px;
+  }
+  .panel.right {
+    border-right: none;
+    border-left: 1px solid var(--border);
+  }
+  .panel-section {
+    margin-bottom: 22px;
+  }
+  .panel-section h2 {
+    font-size: 0.64rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-family: var(--mono);
+    margin-bottom: 10px;
+    font-weight: 400;
+  }
+  .panel-section p, .panel-section li {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  /* ── OVERLAY TOGGLES ── */
+  .overlay-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .overlay-toggle:hover {
+    border-color: var(--border2);
+  }
+  .overlay-toggle.active {
+    background: rgba(74,125,184,0.1);
+    border-color: rgba(74,125,184,0.5);
+  }
+  .overlay-toggle .checkbox {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--text-dim);
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .overlay-toggle.active .checkbox {
+    border-color: var(--text-bright);
+    background: var(--text-bright);
+  }
+  .overlay-toggle.active .checkbox::after {
+    content: "";
+    position: absolute;
+    top: 1px; left: 4px;
+    width: 3px; height: 7px;
+    border: solid var(--bg2);
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+  .overlay-toggle .color-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .overlay-toggle .content {
+    flex: 1;
+    min-width: 0;
+  }
+  .overlay-toggle .label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-bright);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .overlay-toggle .desc {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    line-height: 1.35;
+  }
+
+  /* ── REGION CONTROLS ── */
+  .region-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .region-btn {
+    padding: 6px 10px;
+    font-size: 0.72rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .region-btn:hover { border-color: var(--border2); }
+  .region-btn.active {
+    background: rgba(74,125,184,0.18);
+    border-color: rgba(74,125,184,0.55);
+    color: #8ec6ec;
+  }
+
+  /* ── MAP AREA ── */
+  #map-area {
+    position: relative;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  #map {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    display: block;
+  }
+
+  .sphere {
+    fill: var(--sphere-fill);
+    stroke: var(--border2);
+    stroke-width: 0.3px;
+  }
+  .sphere-glow {
+    fill: none;
+    stroke: var(--sphere-glow);
+    stroke-width: 2.5px;
+  }
+  .graticule {
+    fill: none;
+    stroke: var(--graticule);
+    stroke-width: 0.3px;
+    pointer-events: none;
+  }
+  .country {
+    fill: var(--country-fill);
+    stroke: var(--country-stroke);
+    stroke-width: 0.3px;
+  }
+
+  /* ── NODES ── */
+  .node-ring {
+    fill: none;
+    stroke-width: 2;
+    transition: stroke-width 0.15s, opacity 0.15s;
+    pointer-events: none;
+  }
+  .node-core {
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .node-group:hover .node-ring {
+    stroke-width: 3;
+  }
+  .node-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    fill: var(--text-bright);
+    text-anchor: middle;
+    pointer-events: none;
+    paint-order: stroke;
+    stroke: var(--bg);
+    stroke-width: 2.5px;
+    stroke-linejoin: round;
+    letter-spacing: 0.03em;
+    font-weight: 500;
+  }
+  /* Chinese-ownership ring marker (overlay) */
+  .chinese-marker {
+    fill: none;
+    stroke: var(--c-chinese);
+    stroke-width: 1.5;
+    stroke-dasharray: 4,2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .chinese-marker.visible { opacity: 0.9; }
+  /* Self-loop pulsing ring (domestic flows rendered as rings) */
+  .self-loop-ring {
+    fill: none;
+    stroke: var(--c-neutral);
+    stroke-width: 1.5;
+    pointer-events: none;
+    animation: selfPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes selfPulse {
+    0%,100% { opacity: 0.25; stroke-width: 1.5; }
+    50%     { opacity: 0.6;  stroke-width: 2.5; }
+  }
+
+  /* ── FLOWS ── */
+  .flow-line {
+    fill: none;
+    stroke-linecap: round;
+    transition: opacity 0.15s, stroke-width 0.15s;
+    pointer-events: stroke;
+    cursor: pointer;
+  }
+  .flow-line.faded { opacity: 0.1 !important; }
+  .flow-line:hover { opacity: 1 !important; }
+
+  /* ── TOOLTIP ── */
+  .tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--tt-bg);
+    border: 1px solid var(--tt-border);
+    border-radius: 5px;
+    padding: 11px 13px;
+    font-size: 0.76rem;
+    color: var(--text);
+    max-width: 320px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.15s;
+    backdrop-filter: blur(8px);
+    line-height: 1.45;
+  }
+  .tooltip.visible { opacity: 1; }
+  .tt-title {
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 7px;
+    font-size: 0.82rem;
+  }
+  .tt-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    margin: 3px 0;
+  }
+  .tt-row .lbl { color: var(--text-dim); }
+  .tt-row .val { color: var(--text-bright); font-weight: 500; }
+  .tt-note {
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px solid var(--border);
+    font-size: 0.72rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .tt-tag {
+    display: inline-block;
+    padding: 2px 7px;
+    margin-top: 8px;
+    margin-right: 4px;
+    font-size: 0.62rem;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .tt-tag.qualifying    { background: rgba(74,125,184,0.2);  color: #8ec6ec; border: 1px solid rgba(74,125,184,0.5); }
+  .tt-tag.blocked       { background: rgba(231,111,81,0.18); color: #f4a891; border: 1px solid rgba(231,111,81,0.45); }
+  .tt-tag.blocked_once_refined { background: rgba(122,133,153,0.2); color: #a8b4c7; border: 1px solid rgba(122,133,153,0.45); }
+  .tt-tag.ambiguous     { background: rgba(196,150,86,0.18); color: #d8b278; border: 1px solid rgba(196,150,86,0.45); }
+  .tt-tag.pending_regs  { background: rgba(138,110,168,0.18); color: #b598d0; border: 1px solid rgba(138,110,168,0.45); }
+  .tt-tag.host_state    { background: rgba(196,150,86,0.18); color: #d8b278; border: 1px solid rgba(196,150,86,0.45); }
+  .tt-tag.eu_crma       { background: rgba(94,148,116,0.18); color: #8cbea0; border: 1px solid rgba(94,148,116,0.45); }
+  .tt-tag.chinese       { background: rgba(138,110,168,0.18); color: #b598d0; border: 1px solid rgba(138,110,168,0.45); }
+
+  /* ── FLOATING CONTROLS ── */
+  .zoom-controls {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 10;
+  }
+  .zoom-btn {
+    width: 32px; height: 32px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border2);
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .zoom-btn:hover { background: var(--bg3); border-color: var(--border3); }
+
+  /* ── LEGEND (floating) ── */
+  .legend {
+    position: absolute;
+    bottom: 18px;
+    left: 18px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    padding: 12px 14px;
+    z-index: 10;
+    backdrop-filter: blur(6px);
+    min-width: 220px;
+  }
+  .legend h3 {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-family: var(--mono);
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: var(--text);
+    margin: 4px 0;
+  }
+  .legend-circle {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-bright);
+    flex-shrink: 0;
+  }
+  .legend-line {
+    width: 20px; height: 2.5px;
+    flex-shrink: 0;
+  }
+  .legend-section + .legend-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── RIGHT PANEL: STATS + FINDINGS ── */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.76rem;
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .lbl { color: var(--text-dim); }
+  .stat-row .val { color: var(--text-bright); font-weight: 500; font-family: var(--mono); }
+  .stat-row .val.em { color: #f4a891; }
+
+  .finding {
+    padding: 10px 11px;
+    margin-bottom: 8px;
+    background: var(--bg3);
+    border-left: 2px solid var(--c-pfe);
+    border-radius: 3px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+  .finding-num {
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    margin-right: 6px;
+  }
+
+  /* ── LOADING STATE ── */
+  .loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    background: var(--bg);
+    z-index: 20;
+  }
+  .loading.hidden { display: none; }
+
+  /* Scrollbar styling */
+  .panel::-webkit-scrollbar { width: 6px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  .panel::-webkit-scrollbar-thumb:hover { background: var(--border3); }
+
+  @media (max-width: 1200px) {
+    main { grid-template-columns: 260px 1fr 280px; }
+  }
+  @media (max-width: 980px) {
+    main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+    .panel { max-height: 180px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>Lithium Supply Chain <span>Atlas</span></h1>
+    <p>MINING · REFINING · CELL MFG · POLICY EXPOSURE OVERLAYS</p>
+  </div>
+  <div class="header-right">
+    <span class="brand-tag">Market Access X</span>
+    <a class="header-btn" href="https://marketaccess-x.com/reports/" target="_blank" rel="noopener">
+      Reports →
+    </a>
+  </div>
+</header>
+
+<main>
+  <!-- LEFT PANEL: OVERLAY TOGGLES + REGION CONTROLS -->
+  <aside class="panel left">
+    <div class="panel-section">
+      <h2>Policy Overlays</h2>
+      <div id="overlay-toggles"></div>
+    </div>
+
+    <div class="panel-section">
+      <h2>Region</h2>
+      <div class="region-controls">
+        <button class="region-btn active" data-region="world">WORLD</button>
+        <button class="region-btn" data-region="asia">ASIA-PAC</button>
+        <button class="region-btn" data-region="americas">AMERICAS</button>
+        <button class="region-btn" data-region="europe">EUROPE</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h2>About</h2>
+      <p style="font-size:0.72rem; color: var(--text-dim); line-height:1.55">
+        Interactive visualization of the global lithium supply chain with stackable regulatory overlays. Drag to rotate, scroll to zoom, hover nodes and flows for detail. Data verified April 2026 against primary sources.
+      </p>
+    </div>
+  </aside>
+
+  <!-- MAP AREA -->
+  <div id="map-area">
+    <div class="loading" id="loading">Loading atlas data&hellip;</div>
+    <svg id="map"></svg>
+
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoom-in" title="Zoom in">+</button>
+      <button class="zoom-btn" id="zoom-out" title="Zoom out">−</button>
+      <button class="zoom-btn" id="zoom-reset" title="Reset view" style="font-size:0.68rem">⌂</button>
+    </div>
+
+    <div class="legend">
+      <div class="legend-section">
+        <h3>Node Tiers</h3>
+        <div class="legend-item"><span class="legend-circle" style="background: var(--tier-mining)"></span>Mining</div>
+        <div class="legend-item"><span class="legend-circle" style="background: var(--tier-refining)"></span>Refining</div>
+        <div class="legend-item"><span class="legend-circle" style="background: var(--tier-cells)"></span>Cell manufacturing</div>
+      </div>
+      <div class="legend-section">
+        <h3>Flow States (PFE on)</h3>
+        <div class="legend-item"><span class="legend-line" style="background: var(--c-pfe)"></span>Qualifying</div>
+        <div class="legend-item">
+          <svg width="20" height="2.5" style="flex-shrink:0"><line x1="0" y1="1" x2="20" y2="1" stroke="var(--c-pfe)" stroke-width="2.5" stroke-dasharray="4,3"/></svg>
+          Blocked
+        </div>
+        <div class="legend-item">
+          <svg width="20" height="4" style="flex-shrink:0">
+            <defs><linearGradient id="leg-grad" x1="0" x2="1"><stop offset="0" stop-color="var(--c-neutral)"/><stop offset="1" stop-color="var(--c-pfe)"/></linearGradient></defs>
+            <line x1="0" y1="2" x2="20" y2="2" stroke="url(#leg-grad)" stroke-width="2.5"/>
+          </svg>
+          Blocked once refined
+        </div>
+        <div class="legend-item">
+          <svg width="20" height="2.5" style="flex-shrink:0"><line x1="0" y1="1" x2="20" y2="1" stroke="var(--c-pfe)" stroke-width="2.5" stroke-dasharray="2,3"/></svg>
+          Ambiguous / pending regs
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: STATS + FINDINGS -->
+  <aside class="panel right">
+    <div class="panel-section">
+      <h2>Concentration Risk</h2>
+      <div class="stat-row"><span class="lbl">China refining</span><span class="val em">70%</span></div>
+      <div class="stat-row"><span class="lbl">China cells</span><span class="val em">85%</span></div>
+      <div class="stat-row"><span class="lbl">Top 3 producers</span><span class="val">73%</span></div>
+      <div class="stat-row"><span class="lbl">PFE-qualifying corridors</span><span class="val">~12</span></div>
+    </div>
+
+    <div class="panel-section">
+      <h2>Key Findings</h2>
+      <div class="finding"><span class="finding-num">01</span>Australia's share of China's spodumene imports fell 64.3% → 50.1% (Jan-Sep 2025) as African supply rose.</div>
+      <div class="finding"><span class="finding-num">02</span>Chile overtook Argentina as #1 US lithium source in 2021-24 (54% vs 43%), strengthening 30D compliance.</div>
+      <div class="finding"><span class="finding-num">03</span>Chile→Belgium down 67% YoY Q1 2025 after Umicore halved CAM — EU CRMA undermined from demand side.</div>
+      <div class="finding"><span class="finding-num">04</span>China refined 70% of global lithium chemicals in 2024 but remained net importer (241 kt LCE from Chile/Argentina).</div>
+      <div class="finding"><span class="finding-num">05</span>Zimbabwe regime tightened in real time: Dec 2022 ore ban → Feb 2026 concentrate ban → Apr 2026 quotas.</div>
+      <div class="finding"><span class="finding-num">06</span>Korea quietly retreating from Chile: share fell 28%→15%, value −76%. POSCO ramp not yet compensating.</div>
+      <div class="finding"><span class="finding-num">07</span>Chile 2024 paradox: tonnage +26%, value −57%. Price crash accelerated oversupply.</div>
+      <div class="finding"><span class="finding-num">08</span>The lithium supply chain is no longer an EV chain. Chinese storage output approaching 550 GWh end-2025.</div>
+      <div class="finding"><span class="finding-num">09</span>Chinese operators' overseas ops (BTR Indonesia, Kwinana, Chengxin Indonesia) ineligible for US credits per OBBBA.</div>
+      <div class="finding"><span class="finding-num">10</span>§48E 10-year recapture risk underpriced: single effective-control payment in year 7 wipes entire credit.</div>
+    </div>
+  </aside>
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  LITHIUM SUPPLY CHAIN ATLAS
+//  Architecture mirrors REE atlas (orthographic globe + D3)
+//  Market Access X, April 2026
+// ═══════════════════════════════════════════════════════════════
+
+const mapArea = document.getElementById("map-area");
+const tooltip = d3.select("#tooltip");
+const loading = document.getElementById("loading");
+
+let NODES_RAW = [];
+let FLOWS_RAW = [];
+let OVERLAY_DATA = null;
+
+let NODES = {};        // id -> node object
+let NODE_TAGS = {};    // id -> overlay node-tag object
+let FLOW_TAGS = {};    // flow_id -> overlay flow-tag object
+let FLOWS = [];        // flows with merged tag info
+
+// Overlay state
+const activeOverlays = {
+  us_pfe_regime: true,
+  host_state_controls: false,
+  eu_crma: false,
+  chinese_ownership_node_marker: false
+};
+
+// ─── DIMENSIONS ────────────────────────────────────────────────
+let width  = mapArea.clientWidth;
+let height = mapArea.clientHeight;
+
+const svg = d3.select("#map")
+  .attr("viewBox", `0 0 ${width} ${height}`)
+  .attr("preserveAspectRatio", "xMidYMid meet");
+
+// ─── GLOBE STATE ───────────────────────────────────────────────
+let rotate = [-110, -15];   // initial: Pacific basin framing (Asia-centered)
+let globeScale = Math.min(width, height) * 0.42;
+
+const projection = d3.geoOrthographic()
+  .rotate(rotate)
+  .scale(globeScale)
+  .translate([width / 2, height / 2])
+  .clipAngle(90);
+
+const pathGen = d3.geoPath().projection(projection);
+
+// ─── DRAG TO ROTATE ────────────────────────────────────────────
+let dragStart = null;
+svg.call(d3.drag()
+  .filter(e => !e.target.closest || !e.target.closest(".nodes"))
+  .on("start", (e) => {
+    dragStart = { x: e.x, y: e.y, rotate: [...rotate] };
+    document.getElementById("map").style.cursor = "grabbing";
+  })
+  .on("drag", (e) => {
+    if (!dragStart) return;
+    const dx = e.x - dragStart.x;
+    const dy = e.y - dragStart.y;
+    const s = 0.3;
+    rotate = [
+      dragStart.rotate[0] + dx * s,
+      Math.max(-90, Math.min(90, dragStart.rotate[1] - dy * s))
+    ];
+    projection.rotate(rotate);
+    redraw();
+  })
+  .on("end", () => {
+    dragStart = null;
+    document.getElementById("map").style.cursor = "grab";
+  })
+);
+
+// ─── SCROLL TO ZOOM ────────────────────────────────────────────
+svg.on("wheel", (e) => {
+  e.preventDefault();
+  const f = e.deltaY < 0 ? 1.1 : 0.91;
+  globeScale = Math.max(150, Math.min(3000, globeScale * f));
+  projection.scale(globeScale);
+  redraw();
+}, { passive: false });
+
+// ─── REGION PRESETS ────────────────────────────────────────────
+const REGIONS = {
+  world:    [-110, -15],
+  asia:     [-105, -25],
+  americas: [90, -20],
+  europe:   [-15, -45]
+};
+const BASE_SCALE = () => Math.min(width, height) * 0.42;
+
+function rotateTo(targetRotate, targetScale, duration = 750) {
+  const startRotate = [...rotate];
+  const startScale  = globeScale;
+  const endScale    = targetScale !== undefined ? targetScale : startScale;
+  const t0 = Date.now();
+  function tick() {
+    const t = Math.min(1, (Date.now() - t0) / duration);
+    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+    rotate = [
+      startRotate[0] + (targetRotate[0] - startRotate[0]) * ease,
+      startRotate[1] + (targetRotate[1] - startRotate[1]) * ease
+    ];
+    globeScale = startScale + (endScale - startScale) * ease;
+    projection.rotate(rotate).scale(globeScale);
+    redraw();
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+document.querySelectorAll(".region-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".region-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    rotateTo(REGIONS[btn.dataset.region] || REGIONS.world, BASE_SCALE(), 750);
+  });
+});
+document.getElementById("zoom-in").addEventListener("click", () => {
+  globeScale = Math.min(3000, globeScale * 1.3);
+  projection.scale(globeScale);
+  redraw();
+});
+document.getElementById("zoom-out").addEventListener("click", () => {
+  globeScale = Math.max(150, globeScale * 0.77);
+  projection.scale(globeScale);
+  redraw();
+});
+document.getElementById("zoom-reset").addEventListener("click", () => {
+  document.querySelectorAll(".region-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector('[data-region="world"]').classList.add("active");
+  rotateTo(REGIONS.world, BASE_SCALE(), 700);
+});
+
+// ─── HELPERS ────────────────────────────────────────────────────
+function isOnFrontHemisphere(coords) {
+  const r = projection.rotate();
+  const centre = [-r[0], -r[1]];
+  return d3.geoDistance(coords, centre) < Math.PI / 2;
+}
+
+function shortName(name) {
+  return name.replace(/\s*\(.*?\)/g, "").replace(" mining","").replace(" refining","").replace(" (refining)","");
+}
+
+// ─── NODE SIZING (ring-stack per tier presence) ─────────────────
+// For each location, collect which tiers have a node there
+function getNodeStackInfo(node) {
+  // Find all nodes at very similar coordinates (within 2 degrees) and merge for ring-stack
+  const tiers = { mining: false, refining: false, cells: false };
+  tiers[node.tier] = true;
+  // For now, each node renders its own tier; ring-stack visual shows all tiers
+  // where this country has presence. Look up by coord proximity.
+  NODES_RAW.forEach(n => {
+    if (n.id === node.id) return;
+    const [lon1, lat1] = node.coords;
+    const [lon2, lat2] = n.coords;
+    if (Math.abs(lon1 - lon2) < 5 && Math.abs(lat1 - lat2) < 5) {
+      tiers[n.tier] = true;
+    }
+  });
+  return tiers;
+}
+
+// Volume-based radius (square-root scaling per REE convention)
+function nodeRadius(node) {
+  let v = 0;
+  if (node.tier === "mining") v = node.production_2024_kt_lce || 0;
+  else if (node.tier === "refining") v = node.output_2024_kt_lce || node.plant_actual_2024_kt_lce || 0;
+  else v = node.operational_capacity_2025_gwh || 0;
+  if (!v) return 4;
+  // Square-root scaling with sensible bounds
+  if (node.tier === "cells") {
+    return Math.max(4, Math.min(24, Math.sqrt(v) * 0.55));
+  }
+  return Math.max(4, Math.min(22, Math.sqrt(v) * 0.9));
+}
+
+function tierColor(tier) {
+  if (tier === "mining")   return "var(--tier-mining)";
+  if (tier === "refining") return "var(--tier-refining)";
+  return "var(--tier-cells)";
+}
+function tierColorHex(tier) {
+  if (tier === "mining")   return "#b06dcc";
+  if (tier === "refining") return "#4a9eca";
+  return "#3aaa8f";
+}
+
+// ─── FLOW PATH (great-circle arc via d3.geoInterpolate) ──────────
+function globeFlowPath(d) {
+  const src = NODES[d.source];
+  const tgt = NODES[d.target];
+  if (!src || !tgt) return null;
+
+  // Self-loop: skip here — rendered separately as pulsing ring
+  if (d.source === d.target) return null;
+  const sameLocation = Math.abs(src.coords[0] - tgt.coords[0]) < 1 && Math.abs(src.coords[1] - tgt.coords[1]) < 1;
+  if (sameLocation) return null;
+
+  const interp = d3.geoInterpolate(src.coords, tgt.coords);
+  const steps = 40;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const c = interp(i / steps);
+    // Only plot if on front hemisphere
+    const r = projection.rotate();
+    const centre = [-r[0], -r[1]];
+    if (d3.geoDistance(c, centre) < Math.PI / 2) {
+      const p = projection(c);
+      if (p) pts.push(p);
+    } else {
+      if (pts.length) break; // arc exits the front hemisphere
+    }
+  }
+  if (pts.length < 2) return null;
+  return "M" + pts.map(p => p.join(",")).join("L");
+}
+
+// Self-loops (intra-country flows like CHN→CHN) render as expanding rings around origin
+function isSelfLoop(flow) {
+  const src = NODES[flow.source];
+  const tgt = NODES[flow.target];
+  if (!src || !tgt) return false;
+  return flow.source === flow.target || (Math.abs(src.coords[0] - tgt.coords[0]) < 1 && Math.abs(src.coords[1] - tgt.coords[1]) < 1);
+}
+
+// ─── FLOW STYLING (based on active overlays) ─────────────────────
+function flowStroke(flow) {
+  const tag = FLOW_TAGS[flow.id];
+  if (!tag) return "var(--c-neutral)";
+
+  // Determine primary active overlay
+  const primary = tag.primary_state;
+  const overlays = tag.overlays || [];
+
+  // Priority: PFE > host > CRMA
+  if (activeOverlays.us_pfe_regime && overlays.includes("us_pfe_regime")) {
+    if (primary === "qualifying") return "var(--c-pfe)";
+    if (primary === "blocked") return "var(--c-pfe)";
+    if (primary === "blocked_once_refined") return "url(#grad-pfe)";
+    if (primary === "ambiguous") return "var(--c-pfe)";
+    if (primary === "pending_regs") return "var(--c-pfe)";
+  }
+  if (activeOverlays.host_state_controls && overlays.includes("host_state_controls")) {
+    return "var(--c-host)";
+  }
+  if (activeOverlays.eu_crma && overlays.includes("eu_crma")) {
+    return "var(--c-crma)";
+  }
+  return "var(--c-neutral)";
+}
+
+function flowDashArray(flow) {
+  const tag = FLOW_TAGS[flow.id];
+  if (!tag) return null;
+  const primary = tag.primary_state;
+  if (activeOverlays.us_pfe_regime && tag.overlays?.includes("us_pfe_regime")) {
+    if (primary === "blocked") return "5,3";
+    if (primary === "ambiguous") return "2,3";
+    if (primary === "pending_regs") return "5,5";
+  }
+  return null;
+}
+
+function flowWidth(flow) {
+  const v = flow.volume_lce_kt || 0;
+  if (!v) return 1.2;
+  // Square-root scaling — range ~0.8px (tiny flows) to ~9px (CHN→CHN 650kt)
+  return Math.max(0.8, Math.min(9, Math.sqrt(v) * 0.4));
+}
+
+function flowOpacity(flow) {
+  const tag = FLOW_TAGS[flow.id];
+  if (!tag) return 0.5;
+  const primary = tag.primary_state;
+  if (primary === "pending_regs") return 0.55;
+  if (primary === "ambiguous") return 0.65;
+  return 0.75;
+}
+
+// ─── TOOLTIPS ────────────────────────────────────────────────────
+function showTooltip(event, html) {
+  tooltip.html(html).classed("visible", true);
+  moveTooltip(event);
+}
+function moveTooltip(event) {
+  const ttEl = tooltip.node();
+  const tw = ttEl.offsetWidth;
+  const th = ttEl.offsetHeight;
+  let x = event.clientX + 14;
+  let y = event.clientY - 10;
+  if (x + tw > window.innerWidth - 10) x = event.clientX - tw - 14;
+  if (y + th > window.innerHeight - 10) y = window.innerHeight - th - 10;
+  tooltip.style("left", x + "px").style("top", y + "px");
+}
+function hideTooltip() {
+  tooltip.classed("visible", false);
+}
+
+// ─── OVERLAY TOGGLE UI ────────────────────────────────────────────
+function buildOverlayToggles() {
+  const container = document.getElementById("overlay-toggles");
+  const overlays = OVERLAY_DATA.overlays;
+  container.innerHTML = "";
+  overlays.forEach(ov => {
+    const div = document.createElement("div");
+    div.className = "overlay-toggle" + (activeOverlays[ov.id] ? " active" : "");
+    div.dataset.id = ov.id;
+    div.innerHTML = `
+      <div class="checkbox"></div>
+      <div class="color-dot" style="background: ${ov.primary_color}"></div>
+      <div class="content">
+        <span class="label">${ov.display_name}</span>
+        <span class="desc">${ov.short_label === "US PFE" ? "OBBBA + IRS Notice 2026-15" :
+                            ov.short_label === "Host State" ? "Export controls, nationalism" :
+                            ov.short_label === "EU CRMA" ? "2030 benchmarks, 65% ceiling" :
+                            "Chinese ownership, any geography"}</span>
+      </div>
+    `;
+    div.addEventListener("click", () => {
+      activeOverlays[ov.id] = !activeOverlays[ov.id];
+      div.classList.toggle("active");
+      updateFlowStyling();
+      updateNodeMarkers();
+    });
+    container.appendChild(div);
+  });
+}
+
+// ─── NODE MARKERS (Chinese ownership overlay) ─────────────────────
+function updateNodeMarkers() {
+  d3.selectAll(".chinese-marker").classed("visible", function(d) {
+    if (!activeOverlays.chinese_ownership_node_marker) return false;
+    return d.chinese_owned === true;
+  });
+}
+
+// ─── UPDATE FLOW STYLING (called on overlay toggle) ──────────────
+let flowLines;
+function updateFlowStyling() {
+  if (!flowLines) return;
+  flowLines
+    .attr("stroke", d => flowStroke(d))
+    .attr("stroke-dasharray", d => flowDashArray(d))
+    .attr("stroke-width", d => flowWidth(d))
+    .attr("opacity", d => flowOpacity(d));
+}
+
+// ─── MAIN RENDER ────────────────────────────────────────────────
+let worldData;
+let nodeGroups, selfLoopRings;
+
+Promise.all([
+  d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"),
+  d3.json("data/nodes.json"),
+  d3.json("data/flows.json"),
+  d3.json("data/policy_overlay.json")
+]).then(([world, nodesJSON, flowsJSON, overlayJSON]) => {
+  worldData = world;
+
+  // Parse node dataset (filter out comment strings)
+  NODES_RAW = nodesJSON.nodes.filter(n => typeof n === "object");
+  NODES_RAW.forEach(n => { NODES[n.id] = n; });
+
+  // Parse flow dataset
+  FLOWS_RAW = flowsJSON.flows.filter(f => typeof f === "object");
+  FLOWS = FLOWS_RAW;
+
+  // Parse overlay dataset
+  OVERLAY_DATA = overlayJSON;
+  overlayJSON.flow_tagging.tags.forEach(t => { FLOW_TAGS[t.flow_id] = t; });
+  overlayJSON.node_tagging.tags.forEach(t => { NODE_TAGS[t.node_id] = t; });
+
+  buildOverlayToggles();
+  buildScene();
+  loading.classList.add("hidden");
+}).catch(err => {
+  loading.innerHTML = `Error loading data: ${err.message}<br/><span style="font-size:0.7rem; opacity:0.7">Check that data/nodes.json, data/flows.json, data/policy_overlay.json are accessible.</span>`;
+  console.error(err);
+});
+
+function buildScene() {
+  // Gradient defs (for blocked-once-refined flows)
+  const defs = svg.append("defs");
+
+  const grad = defs.append("linearGradient")
+    .attr("id", "grad-pfe")
+    .attr("gradientUnits", "userSpaceOnUse");
+  grad.append("stop").attr("offset", "0%").attr("stop-color", "#7a8599");
+  grad.append("stop").attr("offset", "100%").attr("stop-color", "#4a7db8");
+
+  // Sphere + graticule
+  svg.append("path")
+    .datum({ type: "Sphere" })
+    .attr("id", "sphere-path")
+    .attr("class", "sphere")
+    .attr("d", pathGen);
+
+  svg.append("path")
+    .datum({ type: "Sphere" })
+    .attr("class", "sphere-glow")
+    .attr("d", pathGen);
+
+  svg.append("path")
+    .datum(d3.geoGraticule()())
+    .attr("class", "graticule")
+    .attr("d", pathGen);
+
+  svg.append("g").attr("class", "countries")
+    .selectAll("path")
+    .data(topojson.feature(worldData, worldData.objects.countries).features)
+    .join("path")
+    .attr("class", "country")
+    .attr("d", pathGen);
+
+  // ── FLOWS (non-self-loop) ────────────────────────────────────
+  const flowsG = svg.append("g").attr("class", "flows");
+  const nonSelfFlows = FLOWS.filter(f => !isSelfLoop(f));
+
+  flowLines = flowsG.selectAll("path")
+    .data(nonSelfFlows, d => d.id)
+    .join("path")
+    .attr("class", "flow-line")
+    .attr("d", d => globeFlowPath(d))
+    .attr("stroke", d => flowStroke(d))
+    .attr("stroke-dasharray", d => flowDashArray(d))
+    .attr("stroke-width", d => flowWidth(d))
+    .attr("opacity", d => flowOpacity(d))
+    .attr("fill", "none")
+    .on("mouseover", function(event, d) {
+      d3.select(this).attr("opacity", 1).attr("stroke-width", flowWidth(d) * 1.4);
+      flowLines.filter(f => f.id !== d.id).classed("faded", true);
+      showFlowTooltip(event, d);
+    })
+    .on("mousemove", (e) => moveTooltip(e))
+    .on("mouseout", function(event, d) {
+      d3.select(this).attr("opacity", flowOpacity(d)).attr("stroke-width", flowWidth(d));
+      flowLines.classed("faded", false);
+      hideTooltip();
+    });
+
+  // ── SELF-LOOPS (intra-country flows) ──────────────────────────
+  const selfLoopFlows = FLOWS.filter(isSelfLoop);
+  const selfLoopG = svg.append("g").attr("class", "self-loops");
+
+  selfLoopRings = selfLoopG.selectAll("circle")
+    .data(selfLoopFlows, d => d.id)
+    .join("circle")
+    .attr("class", "self-loop-ring")
+    .attr("r", d => Math.max(10, Math.sqrt(d.volume_lce_kt || 10) * 0.7))
+    .attr("stroke-width", d => Math.max(1.5, Math.sqrt(d.volume_lce_kt || 10) * 0.12))
+    .style("cursor", "pointer")
+    .style("pointer-events", "stroke")
+    .on("mouseover", function(event, d) {
+      showFlowTooltip(event, d);
+    })
+    .on("mousemove", (e) => moveTooltip(e))
+    .on("mouseout", hideTooltip);
+
+  // ── NODES ─────────────────────────────────────────────────────
+  const nodesG = svg.append("g").attr("class", "nodes");
+
+  nodeGroups = nodesG.selectAll("g.node-group")
+    .data(NODES_RAW, d => d.id)
+    .join("g")
+    .attr("class", "node-group")
+    .style("cursor", "pointer");
+
+  // Chinese-ownership marker ring (outer, rendered below core)
+  nodeGroups.append("circle")
+    .attr("class", "chinese-marker")
+    .attr("r", d => nodeRadius(d) + 6);
+
+  // Core circle (tier color)
+  nodeGroups.append("circle")
+    .attr("class", "node-core")
+    .attr("r", d => nodeRadius(d))
+    .attr("fill", d => tierColorHex(d.tier))
+    .attr("stroke", "#e8eef7")
+    .attr("stroke-width", 1.2)
+    .attr("opacity", 0.92)
+    .on("mouseover", function(event, d) {
+      if (!isOnFrontHemisphere(d.coords)) return;
+      // Fade flows not touching this node
+      flowLines.classed("faded", f => f.source !== d.id && f.target !== d.id);
+      showNodeTooltip(event, d);
+    })
+    .on("mousemove", (e) => moveTooltip(e))
+    .on("mouseout", function() {
+      flowLines.classed("faded", false);
+      hideTooltip();
+    });
+
+  // Label
+  nodeGroups.append("text")
+    .attr("class", "node-label")
+    .attr("dy", d => -(nodeRadius(d) + 6))
+    .text(d => shortName(d.name));
+
+  updateNodeMarkers();
+  redraw();
+}
+
+function redraw() {
+  if (!worldData) return;
+  svg.select("#sphere-path").attr("d", pathGen);
+  svg.select(".sphere-glow").attr("d", pathGen);
+  svg.select(".graticule").attr("d", pathGen);
+  svg.selectAll(".country").attr("d", pathGen);
+
+  if (flowLines) flowLines.attr("d", d => globeFlowPath(d));
+
+  // Update gradient direction to follow each flow's source→target screen-space
+  // (Single shared gradient — orientation approximated in userSpaceOnUse)
+  // For correctness with blocked_once_refined flows, use per-flow gradients below
+  svg.selectAll(".flow-line").each(function(d) {
+    if (FLOW_TAGS[d.id]?.primary_state === "blocked_once_refined") {
+      const src = NODES[d.source];
+      const tgt = NODES[d.target];
+      if (src && tgt && isOnFrontHemisphere(src.coords) && isOnFrontHemisphere(tgt.coords)) {
+        const p1 = projection(src.coords);
+        const p2 = projection(tgt.coords);
+        if (p1 && p2) {
+          let gid = `grad-${d.id}`;
+          let grad = svg.select(`#${gid}`);
+          if (grad.empty()) {
+            grad = svg.select("defs").append("linearGradient")
+              .attr("id", gid)
+              .attr("gradientUnits", "userSpaceOnUse");
+            grad.append("stop").attr("offset","0%").attr("stop-color","#7a8599");
+            grad.append("stop").attr("offset","100%").attr("stop-color","#4a7db8");
+          }
+          grad.attr("x1", p1[0]).attr("y1", p1[1]).attr("x2", p2[0]).attr("y2", p2[1]);
+          d3.select(this).attr("stroke", `url(#${gid})`);
+        }
+      }
+    }
+  });
+
+  if (nodeGroups) {
+    nodeGroups.each(function(d) {
+      const front = isOnFrontHemisphere(d.coords);
+      const p = projection(d.coords);
+      d3.select(this)
+        .style("display", (!front || !p) ? "none" : null)
+        .attr("transform", p ? `translate(${p[0]},${p[1]})` : "translate(-9999,-9999)");
+    });
+  }
+
+  if (selfLoopRings) {
+    selfLoopRings.each(function(d) {
+      const src = NODES[d.source];
+      if (!src) return;
+      const front = isOnFrontHemisphere(src.coords);
+      const p = projection(src.coords);
+      d3.select(this)
+        .style("display", (!front || !p) ? "none" : null)
+        .attr("cx", p ? p[0] : -9999)
+        .attr("cy", p ? p[1] : -9999);
+    });
+  }
+}
+
+// ─── TOOLTIP CONTENT ────────────────────────────────────────────
+function showNodeTooltip(event, d) {
+  const tag = NODE_TAGS[d.id] || {};
+  let vol = "", volLabel = "";
+  if (d.tier === "mining") {
+    vol = d.production_2024_kt_lce;
+    volLabel = "Production 2024";
+  } else if (d.tier === "refining") {
+    vol = d.output_2024_kt_lce || d.plant_actual_2024_kt_lce;
+    volLabel = "Output 2024";
+  } else {
+    vol = d.operational_capacity_2025_gwh;
+    volLabel = "Operational capacity";
+  }
+  const unit = d.tier === "cells" ? "GWh" : "kt LCE";
+  const shareTxt = d.global_share_pct ? ` (${d.global_share_pct}%)` : "";
+
+  let html = `<div class="tt-title">${d.display_label || d.name}</div>`;
+  html += `<div class="tt-row"><span class="lbl">Tier</span><span class="val">${d.tier}</span></div>`;
+  if (vol) html += `<div class="tt-row"><span class="lbl">${volLabel}</span><span class="val">${vol} ${unit}${shareTxt}</span></div>`;
+  if (d.tier === "refining" && d.plant_nameplate_kt_lce) {
+    html += `<div class="tt-row"><span class="lbl">Nameplate</span><span class="val">${d.plant_nameplate_kt_lce} kt LCE</span></div>`;
+  }
+  if (d.tier === "cells" && d.announced_2026_gwh) {
+    html += `<div class="tt-row"><span class="lbl">Announced 2026</span><span class="val">+${d.announced_2026_gwh} GWh</span></div>`;
+  }
+  if (d.note) html += `<div class="tt-note">${d.note}</div>`;
+  if (d.chinese_owned && activeOverlays.chinese_ownership_node_marker) {
+    html += `<span class="tt-tag chinese">Chinese-owned / controlled</span>`;
+  }
+  if (tag.pfe_status === "blocked") {
+    html += `<span class="tt-tag blocked">PFE Blocked</span>`;
+  }
+  if (tag.host_state_status === "escalating") {
+    html += `<span class="tt-tag host_state">Host-state escalating</span>`;
+  }
+  showTooltip(event, html);
+}
+
+function showFlowTooltip(event, d) {
+  const tag = FLOW_TAGS[d.id] || {};
+  const srcName = NODES[d.source]?.display_label || d.source;
+  const tgtName = NODES[d.target]?.display_label || d.target;
+  const arrow = "→";
+
+  let html = `<div class="tt-title">${srcName} ${arrow} ${tgtName}</div>`;
+
+  if (d.volume_lce_kt) {
+    const uncert = d.volume_uncertainty_lce_kt_range ?
+      `${d.volume_uncertainty_lce_kt_range[0]}–${d.volume_uncertainty_lce_kt_range[1]}` :
+      d.volume_uncertainty_pct ? `±${d.volume_uncertainty_pct}%` : "";
+    html += `<div class="tt-row"><span class="lbl">Volume 2024</span><span class="val">${d.volume_lce_kt} kt LCE${uncert ? " ("+uncert+")" : ""}</span></div>`;
+  }
+  if (d.commodity) {
+    html += `<div class="tt-row"><span class="lbl">Commodity</span><span class="val">${d.commodity.length > 40 ? d.commodity.slice(0,40)+"…" : d.commodity}</span></div>`;
+  }
+
+  // Analytical note from overlay tagging (the distinctive Market Access X contribution)
+  if (tag.tooltip_analytical_note) {
+    html += `<div class="tt-note">${tag.tooltip_analytical_note}</div>`;
+  } else if (d.note) {
+    html += `<div class="tt-note">${d.note}</div>`;
+  }
+
+  // Policy tags
+  if (tag.primary_state && activeOverlays.us_pfe_regime && tag.overlays?.includes("us_pfe_regime")) {
+    const stateLabel = tag.primary_state.replace(/_/g," ").toUpperCase();
+    html += `<span class="tt-tag ${tag.primary_state}">${stateLabel}</span>`;
+  }
+  if (activeOverlays.host_state_controls && tag.overlays?.includes("host_state_controls")) {
+    html += `<span class="tt-tag host_state">Host-state</span>`;
+  }
+  if (activeOverlays.eu_crma && tag.overlays?.includes("eu_crma")) {
+    html += `<span class="tt-tag eu_crma">EU CRMA</span>`;
+  }
+
+  showTooltip(event, html);
+}
+
+// ─── RESIZE HANDLER ────────────────────────────────────────────
+window.addEventListener("resize", () => {
+  width = mapArea.clientWidth;
+  height = mapArea.clientHeight;
+  svg.attr("viewBox", `0 0 ${width} ${height}`);
+  globeScale = BASE_SCALE();
+  projection.scale(globeScale).translate([width / 2, height / 2]);
+  redraw();
+});
+</script>
+
+</body>
+</html>

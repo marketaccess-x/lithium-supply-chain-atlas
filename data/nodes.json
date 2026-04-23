@@ -1,0 +1,536 @@
+{
+  "__metadata": {
+    "name": "Lithium Supply Chain Atlas — Node Dataset",
+    "version": "v0.2 (post-verification)",
+    "last_updated": "2026-04-22",
+    "based_on_queries": [
+      "Query 1-8 Deep Research verification pass (Apr 2026)",
+      "USGS MCS 2025 + 2026 (mine production)",
+      "IEA Global Critical Minerals Outlook 2025 (refining share 70%)",
+      "MIIT National Lithium-Ion Battery Industry Operation Report Feb 2025",
+      "BNEF Battery Supply Chain Ranking May 2025",
+      "Company filings (Albemarle, SQM, POSCO, Tianqi, Arcadium/Rio Tinto, Pilbara Minerals, IGO)"
+    ],
+    "material_changes_from_v0.1": [
+      "China cell mfg capacity: 2,250 → 2,450 GWh (85% global, not 75%)",
+      "Refining tier pivoted to plant-level for non-top-three producers (POSCO Gwangyang, Tianqi Kwinana, Albemarle Kemerton, AMG Bitterfeld, etc.) — country-level shares below top-three not publicly verifiable per Query 7",
+      "US cell mfg: 200 → 185 GWh (OBBBA killed $32bn pipeline)",
+      "Hungary cell mfg: 100 → 35 GWh (CATL Debrecen module-only until early 2026)",
+      "France cell mfg: 50 → 13 GWh (Kaiserslautern + Termoli shelved Feb 2026)",
+      "Sweden cell mfg: 25 → 0 GWh (Skellefteå discontinued May 2025)",
+      "Canada cell mfg: 15 → 5 GWh (NextStar Windsor mass production Nov 2025)",
+      "Indonesia cell mfg: 30 → 20 GWh (HLI JV + IWIP ramping)",
+      "Germany cell mfg: 75 → 65 GWh",
+      "Poland cell mfg: 110 → 94 GWh",
+      "Added: Indiana/StarPlus Energy node (Stellantis-Samsung SDI, Kokomo)",
+      "Zimbabwe operators: Zulu misattribution corrected (Premier African Minerals UK, not Huayou)",
+      "Zimbabwe regime: Feb 2026 concentrate ban + Apr 2026 quota system",
+      "Chinese-ownership flag added to nodes for expanded PFE node-marker overlay"
+    ],
+    "chinese_ownership_flag_convention": "Nodes where majority owner/controller is a Chinese entity are tagged 'chinese_owned:true'. Per Query 8 + OBBBA/Notice 2026-15, these nodes have PFE exposure regardless of physical location. Output from these nodes is structurally ineligible for US §45X/§45Y/§48E credit compliance unless ownership dilutes below 25% single-owner / 40% aggregate thresholds.",
+    "node_count": 24,
+    "tier_distribution": {
+      "mining": 9,
+      "refining": 9,
+      "cells": 12
+    }
+  },
+
+  "nodes": [
+
+    "// ═══════════ MINING NODES ═══════════",
+
+    {
+      "id": "AUS",
+      "name": "Australia",
+      "tier": "mining",
+      "display_label": "Australia",
+      "coords": [134, -25],
+      "production_2024_kt_li": 88,
+      "production_2024_kt_lce": 468,
+      "global_share_pct": 36.7,
+      "commodity": "spodumene concentrate (hard rock)",
+      "chinese_owned": false,
+      "policy_tags": [],
+      "note": "World's largest lithium producer by volume. Key operations: Greenbushes (Tianqi/IGO/Albemarle JV), Pilgangoora (Pilbara Minerals), Mt Cattlin (ceased 2024), Kathleen Valley (Liontown, ramping), Mt Holland (SQM-Wesfarmers JV, ramped Q3 2024). Total exports 1.98 Mt H1 2025, 94% to China. Spodumene export market diversifying: Indonesia now #2 customer, Korea share declining.",
+      "sources": ["USGS MCS 2025 lithium sheet", "ABS trade data via Argus Media", "Mysteel Jan-Sep 2025 China imports"]
+    },
+
+    {
+      "id": "CHL",
+      "name": "Chile",
+      "tier": "mining",
+      "display_label": "Chile",
+      "coords": [-70, -24],
+      "production_2024_kt_li": 49,
+      "production_2024_kt_lce": 261,
+      "global_share_pct": 20.4,
+      "commodity": "brine-to-carbonate (integrated)",
+      "chinese_owned": false,
+      "policy_tags": ["host_state_controls"],
+      "note": "Salar de Atacama brine. Operators: SQM (Chilean public) + Albemarle (US). 2024: physical volume +26% to 314 kt LCE, but export value -57% to $2.9bn due to price collapse. National Lithium Strategy (2023) imposed state-partnership model. NovAndino Litio JV (Codelco majority + SQM) operational Dec 27 2025, ~233 kt LCE/yr — world's largest single lithium production unit. Kast (pro-market) elected President Dec 14 2025 — may overhaul Boric strategy.",
+      "sources": ["USGS MCS 2025", "Cochilco lithium exports 2024", "SUBREI Tercera Radiografía del Litio 2024"]
+    },
+
+    {
+      "id": "CHN_mine",
+      "name": "China (mining)",
+      "tier": "mining",
+      "display_label": "China",
+      "coords": [116, 28],
+      "production_2024_kt_li": 41,
+      "production_2024_kt_lce": 218,
+      "global_share_pct": 17.1,
+      "commodity": "hard rock (Yichun/Jiangxi) + brine (Qinghai/Tibet) + lepidolite",
+      "chinese_owned": true,
+      "policy_tags": [],
+      "note": "Domestic production vertically integrated with Chinese refining. Yichun lepidolite operations have increased but face cost pressures; some high-cost capacity phased out during 2024 price crash.",
+      "sources": ["USGS MCS 2025"]
+    },
+
+    {
+      "id": "ARG",
+      "name": "Argentina",
+      "tier": "mining",
+      "display_label": "Argentina",
+      "coords": [-66, -24],
+      "production_2024_kt_li": 18,
+      "production_2024_kt_lce": 96,
+      "global_share_pct": 7.5,
+      "commodity": "brine-to-carbonate (integrated, emerging)",
+      "chinese_owned": false,
+      "policy_tags": [],
+      "note": "Favorable investment regime under Milei's 'Rigi' incentive scheme — >$14bn in planned investments. 2024 output +62% YoY to ~74.6 kt LCE per industry reporting. Key operators: Arcadium/Rio Tinto (Olaroz, Fénix, Sal de Vida), Livent legacy, Allkem legacy, Ganfeng (Cauchari-Olaroz, Mariana). Cochilco projects Argentina will surpass Chile by 2035.",
+      "sources": ["USGS MCS 2025", "Discovery Alert Argentina 2025 reporting"]
+    },
+
+    {
+      "id": "BRA",
+      "name": "Brazil",
+      "tier": "mining",
+      "display_label": "Brazil",
+      "coords": [-42, -18],
+      "production_2024_kt_li": 10,
+      "production_2024_kt_lce": 53,
+      "global_share_pct": 4.2,
+      "commodity": "spodumene (hard rock)",
+      "chinese_owned": false,
+      "policy_tags": [],
+      "note": "Minas Gerais 'Lithium Valley'. Sigma Lithium (Grota do Cirilo) major producer. 2024 output nearly doubled from 2023. BYD + LG Energy Solution offtake arrangements. Brazilian government $2.1bn by 2030 investment in domestic capacity.",
+      "sources": ["USGS MCS 2025", "Sigma Lithium offtake arrangements 2024"]
+    },
+
+    {
+      "id": "ZWE",
+      "name": "Zimbabwe",
+      "tier": "mining",
+      "display_label": "Zimbabwe",
+      "coords": [30, -19],
+      "production_2024_kt_li": 22,
+      "production_2024_kt_lce": 117,
+      "global_share_pct": 9.2,
+      "commodity": "spodumene (hard rock, post-beneficiation)",
+      "chinese_owned": true,
+      "policy_tags": ["host_state_controls", "escalating_restrictions"],
+      "note": "Major 2024-2026 regulatory tightening: Dec 2022 SI 213 raw ore export ban → June 2025 announcement of Jan 2027 concentrate ban → Feb 25 2026 immediate suspension of all raw mineral and concentrate exports → April 2026 quota system with processing-commitment conditions. 2026 tiered export tax: 10% raw ore, 10% concentrate, 0% lithium sulphate — explicit value-addition policy forcing downstream processing. Key operations: Bikita (Sinomine, China, 100%), Arcadia (Zhejiang Huayou Cobalt, China, ~87%+), Sabi Star (Chengxin Lithium, China, Max Mind subsidiary), Zulu (Premier African Minerals UK-listed, NOT Huayou — Canmax ~13% equity + offtake).",
+      "sources": [
+        "USGS MCS 2025",
+        "Reuters Feb 25 2026 — Zimbabwe mineral export suspension",
+        "Reuters April 8 2026 — Zimbabwe lithium quota system",
+        "Sinomine corporate disclosures (Bikita)",
+        "Zhejiang Huayou acquisition reporting (Arcadia)",
+        "Chengxin Lithium corporate page (Sabi Star)",
+        "Premier African Minerals project reporting (Zulu)"
+      ]
+    },
+
+    {
+      "id": "CAN_mine",
+      "name": "Canada (mining)",
+      "tier": "mining",
+      "display_label": "Canada",
+      "coords": [-76, 52],
+      "production_2024_kt_li": 4.3,
+      "production_2024_kt_lce": 23,
+      "global_share_pct": 1.8,
+      "commodity": "spodumene (hard rock)",
+      "chinese_owned": false,
+      "policy_tags": [],
+      "note": "Nemaska Lithium Whabouchi mine (Quebec). Small volume but strategically important for vertically integrated Canada→Bécancour hydroxide route.",
+      "sources": ["USGS MCS 2025"]
+    },
+
+    {
+      "id": "USA_mine",
+      "name": "United States (mining)",
+      "tier": "mining",
+      "display_label": "USA",
+      "coords": [-117, 39],
+      "production_2024_kt_li": 5,
+      "production_2024_kt_lce": 27,
+      "global_share_pct": 2.1,
+      "commodity": "brine (Silver Peak, Nevada)",
+      "chinese_owned": false,
+      "policy_tags": [],
+      "note": "USGS withholds US production data. Single commercial-scale operation at Silver Peak (Albemarle). Utah magnesium-tailings brine operation idled 2024 due to low prices. Thacker Pass, Rhyolite Ridge in development.",
+      "sources": ["USGS MCS 2025 — domestic production withheld", "Albemarle Silver Peak operational reporting"]
+    },
+
+    {
+      "id": "NAM",
+      "name": "Namibia",
+      "tier": "mining",
+      "display_label": "Namibia",
+      "coords": [17, -22],
+      "production_2024_kt_li": 2.7,
+      "production_2024_kt_lce": 14,
+      "global_share_pct": 1.1,
+      "commodity": "spodumene/lepidolite",
+      "chinese_owned": true,
+      "policy_tags": ["host_state_controls"],
+      "note": "Xinfeng Investments (Chinese) operates largest Namibian lithium operations. Ministry of Mines June 2023 export controls similar in pattern to Zimbabwe but smaller scale.",
+      "sources": ["USGS MCS 2025", "Namibian Ministry of Mines export control notices"]
+    },
+
+    "// ═══════════ REFINING NODES (plant-level detail for non-top-three) ═══════════",
+
+    {
+      "id": "CHN_ref",
+      "name": "China (refining)",
+      "tier": "refining",
+      "display_label": "China refining",
+      "coords": [104, 35],
+      "global_share_pct": 70,
+      "output_2024_kt_lce": 1000,
+      "chinese_owned": true,
+      "policy_tags": [],
+      "note": "70% of global refined lithium chemicals per IEA GCMO 2025. 2024 output: ~691 kt battery-grade Li2CO3 + ~354 kt LiOH (all grades) per MIIT/CABIA. Major operators: Ganfeng Lithium, Tianqi Lithium, CATL chemicals subsidiary, EVE, Yahua. Vertically integrated with cathode material and cells. Key insight: despite 70% refining share, China was net importer of refined chemicals in 2024 (+241 kt LCE imports vs 109 kt exports). Chokepoint is processing concentration, not self-sufficiency.",
+      "sources": ["IEA Global Critical Minerals Outlook 2025", "MIIT/CABIA Feb 2025 release", "SMM/Mysteel China Customs 2024"]
+    },
+
+    {
+      "id": "CHL_ref",
+      "name": "Chile (refining)",
+      "tier": "refining",
+      "display_label": "Chile refining",
+      "coords": [-68, -33],
+      "global_share_pct": 14,
+      "output_2024_kt_lce": 314,
+      "chinese_owned": false,
+      "policy_tags": ["host_state_controls"],
+      "note": "Integrated brine-to-carbonate-to-hydroxide. SQM + Albemarle Antofagasta operations. 89% of 2024 output was carbonate (vs 75% in 2023) — producers prioritized standardized product in falling-price environment. Note: Chile + Argentina combined ~25% of global refining per Benchmark/IEA; precise split between the two not publicly disaggregated.",
+      "sources": ["Cochilco lithium market report 2024", "SUBREI Tercera Radiografía 2024"]
+    },
+
+    {
+      "id": "ARG_ref",
+      "name": "Argentina (refining)",
+      "tier": "refining",
+      "display_label": "Argentina refining",
+      "coords": [-64, -32],
+      "global_share_pct": 11,
+      "output_2024_kt_lce": 75,
+      "chinese_owned": false,
+      "policy_tags": [],
+      "note": "Integrated brine-to-carbonate. Rio Tinto Arcadium (Olaroz, Fénix) + Ganfeng Cauchari-Olaroz + Livent/Allkem legacy assets. Rio Tinto acquisition of Arcadium closed March 2025 ($6.7bn). Argentina+Chile combined ~25% of global refining; Argentina specifically growing fast but public data doesn't resolve the split.",
+      "sources": ["Rio Tinto-Arcadium merger filings", "Ganfeng Cauchari-Olaroz reporting"]
+    },
+
+    {
+      "id": "KOR_ref_gwangyang",
+      "name": "POSCO Gwangyang (South Korea)",
+      "tier": "refining",
+      "display_label": "POSCO Gwangyang",
+      "coords": [127.7, 34.9],
+      "plant_nameplate_kt_lce": 43,
+      "plant_actual_2024_kt_lce": 8,
+      "global_share_pct": 0.7,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:qualifying"],
+      "note": "POSCO-Pilbara Minerals JV lithium hydroxide facility. Two trains, 21,500 t/y each = 43 kt/y nameplate. REALITY: Train 1 produced only 1,965 t in Q3 2024 per Pilbara quarterly report. Train 2 completed construction Dec 2024, commercial ramp takes 12-18 months. POSCO publicly stated it will not run at full capacity unless orders improve due to weak lithium market. **Nameplate overstates operational reality by ~5x.** Ramp gap is central to why Korea's Chile retreat isn't yet compensated by domestic refining capacity.",
+      "sources": ["Fastmarkets Nov 2024 — POSCO Train 1 production", "Pilbara Minerals quarterly report", "POSCO Aug 2025 commentary"]
+    },
+
+    {
+      "id": "AUS_ref_kwinana",
+      "name": "Tianqi Kwinana (Australia)",
+      "tier": "refining",
+      "display_label": "Tianqi Kwinana",
+      "coords": [115.8, -32.2],
+      "plant_nameplate_kt_lce": 24,
+      "plant_actual_2024_kt_lce": 3.5,
+      "global_share_pct": 0.3,
+      "chinese_owned": true,
+      "policy_tags": ["us_pfe_regime:blocked"],
+      "note": "**CRITICAL PFE CLASSIFICATION:** Tianqi (51% Chinese) + IGO (49% Australian). Majority Chinese ownership = SFE under OBBBA — disqualified from US §45X/§45Y/§48E contribution regardless of FTA geography. Train 1 produced only 3,500 t in FY2024 vs 24 kt/y nameplate. Train 2 (LHP2) construction ceased; all expansion work halted. IGO booked A$955m loss FY2025 and publicly said 'no path forward' — FEOC regime has foreclosed renegotiation preserving Chinese control. This is the single biggest reclassification: Kwinana is BLOCKED, not qualifying.",
+      "sources": ["The West Australian Kwinana production reporting", "IGO FY2025 annual report", "OBBBA §7701(a)(51) SFE definition", "IRS Notice 2026-15"]
+    },
+
+    {
+      "id": "AUS_ref_kemerton",
+      "name": "Albemarle Kemerton (Australia)",
+      "tier": "refining",
+      "display_label": "Albemarle Kemerton",
+      "coords": [115.7, -33.4],
+      "plant_nameplate_kt_lce": 100,
+      "plant_actual_2024_kt_lce": 15,
+      "global_share_pct": 1.3,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:qualifying"],
+      "note": "Four-train design at 25 kt/y each = 100 kt/y nameplate. 2024 progression: Train 2 placed into care and maintenance July 2024; Train 3 construction halted; Train 4 shelved earlier 2024; remaining Train 1 idled subsequently. Actual 2024 output materially below design. Australian FTA-qualifying. Albemarle CEO publicly stated 'math doesn't work' for South Carolina refinery; Kemerton facing similar pressures.",
+      "sources": ["Reuters/CNBC Jul 31 2024 — Albemarle Kemerton cuts", "ABC News Aug 1 2024 — 300 job losses", "Indian Chemical News — Kemerton shutdown"]
+    },
+
+    {
+      "id": "CAN_ref_becancour",
+      "name": "Nemaska Bécancour (Canada)",
+      "tier": "refining",
+      "display_label": "Nemaska Bécancour",
+      "coords": [-72.4, 46.3],
+      "plant_nameplate_kt_lce": 34,
+      "plant_actual_2024_kt_lce": 5,
+      "global_share_pct": 0.4,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:qualifying"],
+      "note": "Nemaska Lithium / Livent legacy integrated Whabouchi mine → Bécancour hydroxide plant. Ramp-up 2024-2025. Canada-US FTA (USMCA) qualifying throughout.",
+      "sources": ["Nemaska Lithium / Arcadium filings"]
+    },
+
+    {
+      "id": "DEU_ref_bitterfeld",
+      "name": "AMG Bitterfeld (Germany)",
+      "tier": "refining",
+      "display_label": "AMG Bitterfeld",
+      "coords": [12.3, 51.6],
+      "plant_nameplate_kt_lce": 20,
+      "plant_actual_2024_kt_lce": 2,
+      "global_share_pct": 0.2,
+      "chinese_owned": false,
+      "policy_tags": ["eu_crma_strategic_project"],
+      "note": "Europe's first battery-grade lithium hydroxide refinery. Module 1 (20 kt/y) commissioned September 2024 — limited 2024 output. Plans to expand to 100 kt/y via four additional modules by 2030. Rock Tech Guben converter under construction separately; production not expected until 2026.",
+      "sources": ["AMG Critical Materials press release Sept 2024", "Rock Tech Guben development timeline"]
+    },
+
+    {
+      "id": "JPN_ref_naraha",
+      "name": "Naraha + Toyotsu (Japan)",
+      "tier": "refining",
+      "display_label": "Japan refining",
+      "coords": [140.1, 37.3],
+      "plant_nameplate_kt_lce": 20,
+      "plant_actual_2024_kt_lce": 10,
+      "global_share_pct": 0.9,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:ambiguous"],
+      "note": "Naraha Lithium Hydroxide Plant (Rio Tinto/Toyota Tsusho, 10 kt/y, completed 2023, supplied by Olaroz Argentine carbonate) + Toyotsu Lithium operations. Combined ~20 kt/y nameplate. Japan-US no FTA but close alliance; PFE classification ambiguous pending Treasury clarification.",
+      "sources": ["Rio Tinto Naraha reporting", "Toyota Tsusho Integrated Report 2024"]
+    },
+
+    {
+      "id": "USA_ref",
+      "name": "US refining",
+      "tier": "refining",
+      "display_label": "US refining",
+      "coords": [-117, 39],
+      "global_share_pct": 2,
+      "output_2024_kt_lce": 20,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:qualifying"],
+      "note": "Commercial production from Silver Peak (Albemarle Nevada) + downstream compound production at undisclosed facilities. USGS withholds detail. Albemarle's planned South Carolina refinery on hold (CEO: 'math doesn't work'). Net: US refining is ~2% of global but fully PFE-qualifying throughout.",
+      "sources": ["USGS MCS 2025", "Albemarle CEO statement May 2025"]
+    },
+
+    "// ═══════════ CELL MANUFACTURING NODES (post-Query 6 corrections) ═══════════",
+
+    {
+      "id": "CHN_cell",
+      "name": "China (cell mfg)",
+      "tier": "cells",
+      "display_label": "China cells",
+      "coords": [119, 26],
+      "operational_capacity_2025_gwh": 2450,
+      "announced_2026_gwh": 1200,
+      "global_share_pct": 85,
+      "chinese_owned": true,
+      "policy_tags": [],
+      "note": "85% of global cell production operational mid-2025 per BNEF 5th Supply Chain Ranking. 2024 total output 1,086 GWh (826 GWh power + 260 GWh storage). **Storage-grade output approaching 550 GWh end-2025, nearly half of power battery volume** — industry bifurcating. Overseas storage orders +246% YoY H1 2025. Capacity utilization ~50% due to overcapacity; driving consolidation. CATL, BYD, CALB, EVE, Gotion dominant. LFP 69% of domestic market.",
+      "sources": ["MIIT Feb 2025 report", "BNEF Supply Chain Ranking May 2025", "Mordor Intelligence 2025"]
+    },
+
+    {
+      "id": "KOR_cell",
+      "name": "South Korea (cell mfg)",
+      "tier": "cells",
+      "display_label": "Korea cells",
+      "coords": [127, 36],
+      "operational_capacity_2025_gwh": 165,
+      "announced_2026_gwh": 40,
+      "global_share_pct": 5.7,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:qualifying"],
+      "note": "LG Energy Solution + Samsung SDI + SK On. Korean makers aggressively converting idle EV lines to BESS for AI data center demand. LGES 2025 operating profit +134% YoY on US production incentives. LGES announced 40% reduction in 2026 capex + pivot to 'mid-to-low-end solutions like LFP in Europe' (Jan 29 2026). Samsung SDI pilot lines for all-solid-state + lithium-sulfur.",
+      "sources": ["LGES 2025 financial results", "InvestKorea battery report", "SNE Research 2025"]
+    },
+
+    {
+      "id": "JPN_cell",
+      "name": "Japan (cell mfg)",
+      "tier": "cells",
+      "display_label": "Japan cells",
+      "coords": [138, 36],
+      "operational_capacity_2025_gwh": 110,
+      "announced_2026_gwh": 15,
+      "global_share_pct": 3.8,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:ambiguous"],
+      "note": "Panasonic (Tesla partner, Nevada + Kansas US plants), Toyota (with Panasonic solid-state pilot), Nissan. Government ¥347.9bn funding target of 150 GWh domestic by 2030. Toyota-Panasonic $1.64bn investment for 9 GWh solid-state + prismatic, production Nov 2026.",
+      "sources": ["Fortune Business Insights Japan battery market", "Toyota-Panasonic JV reporting"]
+    },
+
+    {
+      "id": "USA_cell",
+      "name": "US (cell mfg)",
+      "tier": "cells",
+      "display_label": "US cells",
+      "coords": [-86, 36],
+      "operational_capacity_2025_gwh": 185,
+      "announced_2026_gwh": 350,
+      "cancelled_post_obbba_gwh": 140,
+      "global_share_pct": 6.4,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:qualifying"],
+      "note": "**OBBBA (July 4 2025) killed $32bn clean energy pipeline in 2025.** Cancellations/delays: Ford-SK On KY $5.8bn, Stellantis IL $3.2bn, GM MI. Tesla/Panasonic Nevada + Kansas operational. StarPlus Indiana Plant 1 operational. SK On Georgia operational. OBBBA terminated §30D EV credit Sept 30 2025 but preserved §48E storage ITC — US makers pivoting to BESS. Utility-scale storage 57.6 GWh 2025 (+30% YoY). Tesla storage alone 46.7 GWh 2025. MACR thresholds 55%→75% by 2030 will force continued non-Chinese sourcing.",
+      "sources": ["Fast Company Dec 2025 — $32bn cancellations", "SEIA 2025 storage report", "OBBBA statutory text Public Law 119-21"]
+    },
+
+    {
+      "id": "USA_cell_indiana",
+      "name": "StarPlus Indiana (USA)",
+      "tier": "cells",
+      "display_label": "StarPlus Indiana",
+      "coords": [-86.1, 40.5],
+      "operational_capacity_2025_gwh": 33,
+      "announced_2026_gwh": 34,
+      "global_share_pct": 1.1,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:qualifying"],
+      "note": "Stellantis-Samsung SDI JV at Kokomo, Indiana. Plant 1 operational 2025. Plant 2 announced at Kokomo for end-2026 (additional 33+ GWh). Representative of 'ally-shoring' JV structure — Korean cell technology + US market access. PFE-qualifying: Samsung (Korea, FTA) + Stellantis (Italian-French-Dutch).",
+      "sources": ["Stellantis-Samsung SDI Kokomo announcement", "StarPlus Energy reporting"]
+    },
+
+    {
+      "id": "POL_cell",
+      "name": "Poland (cell mfg)",
+      "tier": "cells",
+      "display_label": "Poland cells",
+      "coords": [17, 52],
+      "operational_capacity_2025_gwh": 94,
+      "announced_2026_gwh": 12,
+      "global_share_pct": 3.2,
+      "chinese_owned": false,
+      "policy_tags": ["eu_crma"],
+      "note": "LG Energy Solution Wroclaw (86 GWh operational, target 90 by year-end) = largest battery facility in Europe. '46inEU' project (Jan 2026) = 12 GWh line for 46-series cylindrical cells at existing Wroclaw site. Direct response to European premium OEM demand for higher energy density.",
+      "sources": ["LGES Poland corporate site", "Metal.com 46-series reporting"]
+    },
+
+    {
+      "id": "HUN_cell",
+      "name": "Hungary (cell mfg)",
+      "tier": "cells",
+      "display_label": "Hungary cells",
+      "coords": [19, 47],
+      "operational_capacity_2025_gwh": 35,
+      "announced_2026_gwh": 100,
+      "global_share_pct": 1.2,
+      "chinese_owned": false,
+      "policy_tags": ["eu_crma", "chinese_influence:catl_debrecen"],
+      "note": "Samsung SDI Göd + SK On Komárom operational. **CATL Debrecen gigafactory (40 GWh) nearly operational** — module assembly ongoing since 2024 (>120,000 modules produced), mass cell production scheduled early 2026. Already 100% booked by European clients. Hungary dropped 7 spots in BNEF 2025 ranking due to governance/permitting issues. CATL operations create PFE ambiguity for downstream US-bound material.",
+      "sources": ["China Daily CATL Debrecen Dec 2025", "BNEF 2025 Supply Chain Ranking"]
+    },
+
+    {
+      "id": "DEU_cell",
+      "name": "Germany (cell mfg)",
+      "tier": "cells",
+      "display_label": "Germany cells",
+      "coords": [10, 51],
+      "operational_capacity_2025_gwh": 65,
+      "announced_2026_gwh": 40,
+      "global_share_pct": 2.2,
+      "chinese_owned": false,
+      "policy_tags": ["eu_crma"],
+      "note": "Volkswagen PowerCo Salzgitter Block 1 in early production 2025; full 40 GWh target. Germany led EU in 2025 battery storage installations at 6.6 GWh. Structural barrier: production costs still ~50% higher than China.",
+      "sources": ["VW PowerCo corporate reporting"]
+    },
+
+    {
+      "id": "FRA_cell",
+      "name": "France (cell mfg)",
+      "tier": "cells",
+      "display_label": "France cells",
+      "coords": [2.3, 48.9],
+      "operational_capacity_2025_gwh": 13,
+      "announced_2026_gwh": 15.6,
+      "global_share_pct": 0.4,
+      "chinese_owned": false,
+      "policy_tags": ["eu_crma"],
+      "note": "ACC (Stellantis-Mercedes-Saft) Billy-Berclau/Douvrin Block 1 (13 GWh) operational. **Kaiserslautern (Germany) and Termoli (Italy) definitively shelved Feb 2026.** ACC refocusing on French site only; 'ACCEPT' project targets scale to 40 GWh by 2030. France is now the 'industrial center of gravity' for ACC.",
+      "sources": ["Battery-Tech.net ACC reporting Feb 2026", "Saft corporate communications"]
+    },
+
+    {
+      "id": "SWE_cell",
+      "name": "Sweden (Northvolt — failed)",
+      "tier": "cells",
+      "display_label": "Sweden (Northvolt)",
+      "coords": [18, 59],
+      "operational_capacity_2025_gwh": 0,
+      "announced_2026_gwh": 0,
+      "global_share_pct": 0,
+      "chinese_owned": false,
+      "policy_tags": ["eu_crma", "failed_capacity"],
+      "note": "**Failed attempt — kept as narrative node.** Northvolt AB Chapter 11 filing Nov 2024; Swedish liquidation-style bankruptcy March 12 2025. Skellefteå production discontinued May 2025. Workforce reduced by ~3,000. Northvolt Germany and Northvolt North America subsidiaries financed separately, outside insolvency proceedings. Represents the failure of the European Battery Alliance sovereignty ambition — flagged as cautionary node rather than contributing capacity.",
+      "sources": ["Electrive.com Northvolt reporting April 2025", "Financier Worldwide Chapter 11 filing"]
+    },
+
+    {
+      "id": "CAN_cell",
+      "name": "Canada (cell mfg)",
+      "tier": "cells",
+      "display_label": "Canada cells",
+      "coords": [-83, 42.3],
+      "operational_capacity_2025_gwh": 5,
+      "announced_2026_gwh": 85,
+      "global_share_pct": 0.2,
+      "chinese_owned": false,
+      "policy_tags": ["us_pfe_regime:qualifying"],
+      "note": "NextStar Energy Windsor (Stellantis-LGES JV) mass production began Nov 18 2025. One-millionth cell produced Feb 2026. **Stellantis sold 49% stake to LGES Feb 6 2026 for $100** — LGES now sole owner, Stellantis remains customer. Facility pivoting to include BESS production. VW PowerCo St Thomas: foundation work ongoing Oct 2025.",
+      "sources": ["NextStar Energy corporate reporting", "Electric Autonomy Canada Feb 2026", "Volkswagen PowerCo St Thomas"]
+    },
+
+    {
+      "id": "IDN_cell",
+      "name": "Indonesia (cell mfg)",
+      "tier": "cells",
+      "display_label": "Indonesia cells",
+      "coords": [110, -7],
+      "operational_capacity_2025_gwh": 20,
+      "announced_2026_gwh": 35,
+      "global_share_pct": 0.7,
+      "chinese_owned": true,
+      "policy_tags": ["us_pfe_regime:blocked", "chinese_controlled_location"],
+      "note": "HLI (Hyundai-LGES JV) commercial production from April 2024, 10 GWh initial → 20 GWh end-2025. **Critical PFE issue:** IWIP (PT Indonesia Weda Bay) 8 GWh independent cell production mid-2026 is Chinese-controlled (BTR-style structure). CATL Karawang + Rept Battero expansions also Chinese-affiliated. Per Query 8 / OBBBA: Chinese-controlled Indonesian operations are structurally ineligible for US §45X/§45Y/§48E despite non-China geography. Hyundai-LGES JV portion is PFE-qualifying.",
+      "sources": ["Windonesia IWIP reporting", "HLI commercial production Apr 2024"]
+    }
+
+  ],
+
+  "__data_gaps_and_caveats": [
+    "Country-level refining shares below top-three are NOT publicly verifiable per Query 7. Node-level refining volumes for smaller plants use 2024 actual production where disclosed; nameplate capacities shown separately.",
+    "Chinese-owned flag applies to majority (>50%) or 25%+ single-owner or 40%+ aggregate ownership per OBBBA/Notice 2026-15 thresholds. Some cases (e.g., Rio Tinto's Chinalco 14.99% holding) remain ambiguous pending regulatory clarification.",
+    "Output figures in kt LCE are 2024 full-year where stated. Ranges or estimates are flagged in notes where precision is limited.",
+    "Tianqi Kwinana classification (BLOCKED) is the most consequential single reclassification vs flows_v0.1 and affects multiple downstream flows.",
+    "Zulu operation (Zimbabwe) re-attributed: NOT Huayou (I had wrong); operated by Premier African Minerals (UK) with Canmax ~13% equity.",
+    "BESS pivot is treated as a structural market trend affecting cell nodes but not requiring separate node tagging."
+  ]
+}

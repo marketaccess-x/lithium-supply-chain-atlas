@@ -1,0 +1,625 @@
+{
+  "__metadata": {
+    "name": "Lithium Supply Chain Atlas — Flow Dataset",
+    "version": "v0.2 (post-verification)",
+    "last_updated": "2026-04-22",
+    "companion_file": "nodes_v0.2.json",
+
+    "methodology_notes": [
+      "Every volume estimate is anchored to a cited published tonnage figure or explicitly marked as bounded estimate with uncertainty.",
+      "Mining → Refining flows use actual trade data where published (ABS for Australia, Cochilco for Chile, Chinese customs via Mysteel where available).",
+      "Refining → Cells flows are largely not independently traded — China's integrated supply chain means intra-Chinese flow is the largest single movement but does not show up in bilateral trade data. Cross-border refining-to-cells flows are small in volume but carry significant policy-weight.",
+      "Volume units: kt LCE (lithium carbonate equivalent, thousand tonnes). Concentrate converted from physical tonnage using 6% Li2O spodumene → ~0.101 t LCE per tonne concentrate. Direct chemical imports (carbonate, hydroxide) reported in LCE-equivalent per industry standard.",
+      "For the CHN→CHN intra-flow, the 650 kt central estimate represents domestic-refined Chinese chemicals flowing to Chinese cell plants. A separate ~240 kt flow of imported carbonate (from Chile/Argentina) also terminates at Chinese cell plants but is rendered in the atlas as part of the CHL→CHN and ARG→CHN flows with a tooltip explainer noting the downstream destination.",
+      "Plant-level refining flows (Kwinana, Kemerton, Gwangyang, Bitterfeld, Bécancour, Naraha) use disclosed 2024 actual output rather than nameplate capacity. Per Query 7, country-level refining shares below top-three are not publicly verifiable."
+    ],
+
+    "policy_state_legend": {
+      "qualifying": "Flow + destination meet OBBBA PFE rules and source is FTA partner or critical-minerals-agreement partner — eligible for US §45X/§45Y/§48E credit contribution.",
+      "blocked": "Flow disqualified from US credit contribution due to PFE origin (Chinese-refined or Chinese-owned entity, regardless of geography).",
+      "ambiguous": "PFE classification depends on Treasury guidance not yet issued; deals proceeding with indemnity packages.",
+      "pending_regs": "Statutorily triggered but operational tests not yet defined in regulations; effective boundary pending future IRS/Treasury rules (expected late 2026 per Notice 2026-15).",
+      "blocked_once_refined": "Flow is itself legal and falls under no US policy restriction at origin, but resulting refined product becomes PFE-blocked at destination. Rendered in atlas as gradient from neutral at source to policy-color at destination.",
+      "host_state_controls": "Flow originates in jurisdiction with export restriction, state-partnership mandate, or resource-nationalism regime. May overlap with other tags.",
+      "eu_crma": "Flow terminates in EU refining/cells and is subject to CRMA strategic-project provisions or 65% third-country ceiling from 2030."
+    },
+
+    "chinese_ownership_node_marker": "Atlas applies a distinct node-marker overlay (muted purple) to all majority-Chinese-owned nodes regardless of physical location. Covers: CHN_mine, CHN_ref, CHN_cell (domestic), ZWE, NAM (Chinese operators), AUS_ref_kwinana (Tianqi 51%), IDN_cell (partial, Chinese-controlled portions like IWIP). Overlay signals PFE exposure for US-bound downstream material.",
+
+    "bankable_findings_reference": "10 verified findings stored in memory entries 15-18 for launch LinkedIn post.",
+
+    "flow_count": 31
+  },
+
+  "flows": [
+
+    "// ═══════════ MINING → REFINING ═══════════",
+
+    {
+      "id": "AUS_CHN_ore",
+      "source": "AUS",
+      "target": "CHN_ref",
+      "tier_transition": "mining→refining",
+      "commodity": "spodumene concentrate",
+      "volume_lce_kt": 189,
+      "volume_uncertainty_pct": 5,
+      "share_of_source_exports_pct": 94,
+      "share_of_target_imports_pct": 50.1,
+      "policy_state": "blocked_once_refined",
+      "policy_tags": ["pfe_downstream_block", "australia_fta_origin_lost_through_chinese_refining"],
+      "note": "The defining flow of the global lithium system. 1.86 Mt spodumene H1 2025 per ABS. Australia's share of Chinese spodumene imports fell from 64.3% (2024) to 50.1% (Jan-Sep 2025) as African supply rose. Volume annualized from H1 2025 × 2. Flow is legal and FTA-origin, but resulting Chinese-refined chemicals are PFE-blocked for US credit contribution.",
+      "sources": [
+        "ABS trade data via Argus Media Aug 2025 (1H 2025: 1.86 Mt)",
+        "Mysteel Jan-Sep 2025 China imports analysis (50.1% Australia share)"
+      ]
+    },
+
+    {
+      "id": "AUS_KWINANA_ore",
+      "source": "AUS",
+      "target": "AUS_ref_kwinana",
+      "tier_transition": "mining→refining",
+      "commodity": "spodumene concentrate (Greenbushes)",
+      "volume_lce_kt": 4,
+      "volume_uncertainty_pct": 15,
+      "policy_state": "blocked",
+      "policy_tags": ["pfe_sfe_chinese_owned_destination"],
+      "note": "Greenbushes spodumene feeding Tianqi Kwinana hydroxide plant. **CRITICAL: Flow is legal but destination is 51% Chinese-owned (Tianqi), so classified SFE under OBBBA. Flow output does NOT count toward US MACR compliance.** Kwinana Train 1 produced only 3,500 t LiOH FY2024; Train 2 construction halted. IGO booked A$955m loss FY2025. Atlas tooltip should flag this as the single most consequential PFE reclassification vs conventional wisdom.",
+      "sources": [
+        "The West Australian reporting on Kwinana 2024 output",
+        "IGO FY2025 annual report",
+        "OBBBA §7701(a)(51) SFE definition",
+        "IRS Notice 2026-15 (Feb 12 2026)"
+      ]
+    },
+
+    {
+      "id": "AUS_KEMERTON_ore",
+      "source": "AUS",
+      "target": "AUS_ref_kemerton",
+      "tier_transition": "mining→refining",
+      "commodity": "spodumene concentrate",
+      "volume_lce_kt": 15,
+      "volume_uncertainty_pct": 25,
+      "policy_state": "qualifying",
+      "policy_tags": ["australia_fta", "albemarle_us_owned"],
+      "note": "Feeds Albemarle Kemerton lithium hydroxide refinery. Nameplate 100 kt/yr (4 trains); 2024 progression saw Trains 2/3/4 progressively shelved, Train 1 subsequently idled. Actual 2024 output materially below nameplate. Albemarle is US-owned so ownership test clear; geography test clear. Flow PFE-qualifying throughout. Uncertainty range reflects ambiguity about actual operational output in 2024.",
+      "sources": [
+        "Reuters/CNBC Jul 31 2024 — Albemarle Kemerton production cuts",
+        "ABC News Aug 1 2024 — Kemerton job losses announcement"
+      ]
+    },
+
+    {
+      "id": "AUS_IDN_ore",
+      "source": "AUS",
+      "target": "IDN_cell",
+      "tier_transition": "mining→cells",
+      "commodity": "spodumene concentrate (routed for Chinese-operated Indonesian refining)",
+      "volume_lce_kt": 5,
+      "volume_uncertainty_pct": 20,
+      "share_of_source_exports_pct": 3.4,
+      "policy_state": "blocked_once_refined",
+      "policy_tags": ["china_plus_one_diversification_blocked", "chinese_owned_destination"],
+      "note": "Emerging flow, Indonesia overtook South Korea as #2 Australian spodumene destination H1 2025 (66,678 t vs 25,098 t prior year). Chengxin Lithium (Chinese) commissioned 60 kt/yr lithium plant in Indonesia mid-2024 processing hard-rock imports. **Per Query 8/OBBBA: the Chinese-controlled Indonesian processing is structurally ineligible for US credit compliance despite non-China geography.** Classic case of 'China+1' strategy that doesn't clear PFE.",
+      "sources": [
+        "Argus Media Aug 2025 — Indonesia overtakes Korea",
+        "Chengxin Lithium Indonesia commissioning reporting"
+      ]
+    },
+
+    {
+      "id": "AUS_GWANGYANG_ore",
+      "source": "AUS",
+      "target": "KOR_ref_gwangyang",
+      "tier_transition": "mining→refining",
+      "commodity": "spodumene concentrate (Pilbara offtake)",
+      "volume_lce_kt": 2,
+      "volume_uncertainty_pct": 30,
+      "share_of_source_exports_pct": 2.4,
+      "policy_state": "qualifying",
+      "policy_tags": ["korea_fta_qualifying", "posco_ramp_gap"],
+      "note": "Pilbara Minerals spodumene → POSCO-Pilbara Gwangyang JV. **Important reality check: Gwangyang produced only 1,965 t LiOH in Q3 2024 from Train 1; Train 2 commissioning began Dec 2024. Actual 2024 utilization was far below nameplate.** This ramp gap explains why Korean retreat from Chilean carbonate imports has not yet been compensated by Gwangyang output — the substitution is aspirational, not achieved. Korea-US FTA qualifying.",
+      "sources": [
+        "Fastmarkets Nov 2024 — POSCO Train 1 production data",
+        "Pilbara Minerals-POSCO offtake agreement",
+        "Pilbara Minerals quarterly reports"
+      ]
+    },
+
+    {
+      "id": "CHL_CHN_chem",
+      "source": "CHL_ref",
+      "target": "CHN_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium carbonate (refined in Chile)",
+      "volume_lce_kt": 186,
+      "volume_uncertainty_pct": 3,
+      "share_of_source_exports_pct": 71,
+      "policy_state": "blocked",
+      "policy_tags": ["chinese_destination_final", "host_state_controls_origin"],
+      "note": "**Largest single refining→cells cross-border flow.** Chile's 2024 lithium exports: $2.895 bn total, 71% to China by value (=$2.057 bn, ~186 kt LCE). Flow goes directly from Chilean refiners to Chinese cell plants (via Chinese distributors). Represents the 'imported passthrough' component that contributes to Chinese cell production — important for understanding that China is a net importer of refined lithium despite 70% refining share. Classified 'blocked' because destination is Chinese cell production (downstream ineligible for US credits).",
+      "sources": [
+        "ANDAMAN PARTNERS / Cochilco 2024 data",
+        "SUBREI Tercera Radiografía del Litio 2024"
+      ]
+    },
+
+    {
+      "id": "CHL_KOR_chem",
+      "source": "CHL_ref",
+      "target": "KOR_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium carbonate",
+      "volume_lce_kt": 40,
+      "volume_uncertainty_pct": 5,
+      "share_of_source_exports_pct": 15,
+      "policy_state": "qualifying",
+      "policy_tags": ["korea_retreat_in_progress", "value_down_76pct_2024"],
+      "note": "**Korea's quiet retreat from Chile.** Korea's share of Chilean lithium exports fell from 28% (2023) to 15% (2024); value fell 76% to $434m. Korean cell makers are substituting Australian-spodumene-refined-in-Korea (Gwangyang) but POSCO ramp has been slow (see AUS_GWANGYANG_ore flow). In 2024 Korean makers were likely running lean inventory or sourcing elsewhere. Intended trajectory: reduce Chilean dependency further as Gwangyang ramps. PFE-qualifying throughout.",
+      "sources": [
+        "Cochilco 2024 destination data",
+        "Argus Media Q1 2025 Chilean lithium exports"
+      ]
+    },
+
+    {
+      "id": "CHL_USA_chem",
+      "source": "CHL_ref",
+      "target": "USA_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium carbonate",
+      "volume_lce_kt": 7,
+      "volume_uncertainty_pct": 10,
+      "share_of_source_exports_pct": 4.2,
+      "policy_state": "qualifying",
+      "policy_tags": ["us_chile_fta", "pfe_fully_cleared"],
+      "note": "**Chile overtook Argentina as #1 US lithium source.** USGS MCS 2026 reports 2021-24 US import sources: Chile 54%, Argentina 43%, other 3%. Reversal of 2019-22 pattern. The rebalancing strengthens US 30D compliance since Chile is an FTA partner. Volume calculated from 4.2% of Chile exports = ~$119m; LCE-equivalent at 2024 prices. Per Query 2: total US lithium imports for consumption 2024 = ~3,020 t Li content (~16 kt LCE), of which Chile ~54% = ~8.6 kt LCE — slight tension with the share-based 7 kt figure, reflecting published-data inconsistency across sources.",
+      "sources": [
+        "USGS MCS 2026 — US Import Sources 2021-24",
+        "Cochilco 2024 destination shares"
+      ]
+    },
+
+    {
+      "id": "CHL_JPN_chem",
+      "source": "CHL_ref",
+      "target": "JPN_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium carbonate",
+      "volume_lce_kt": 13,
+      "volume_uncertainty_pct": 10,
+      "share_of_source_exports_pct": 4.1,
+      "policy_state": "qualifying",
+      "policy_tags": ["japan_ally"],
+      "note": "Feeds Japanese chemical sector (Nippon Chemical, Toyota Tsusho-Arcadium JV). Japan runs on NMC chemistry; Chilean battery-grade carbonate feeds this. Relatively stable share through 2024.",
+      "sources": ["Cochilco 2024 destination data"]
+    },
+
+    {
+      "id": "CHL_BEL_chem",
+      "source": "CHL_ref",
+      "target": "DEU_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium carbonate/hydroxide (via Belgium Umicore)",
+      "volume_lce_kt": 5,
+      "volume_uncertainty_pct": 20,
+      "share_of_source_exports_pct": 2,
+      "policy_state": "eu_crma",
+      "policy_tags": ["crma_demand_side_undermined", "umicore_halving"],
+      "note": "**EU CRMA undermined from the demand side.** Historically flowed to Belgium (Umicore CAM operations). Q1 2025: -67% YoY after Umicore CORE strategy halved 2025 cathode production. Pre-2025 Belgium was Chile's #3 destination; now collapsed. Destination 'DEU' in atlas is simplification — actual flow was Belgium for CAM processing, then CAM outputs to German cell plants. Tool tooltip should explain this.",
+      "sources": [
+        "Argus Media Q1 2025 — Belgium 67% drop",
+        "Umicore CORE strategy 2025 guidance + Full Year Results 2025"
+      ]
+    },
+
+    {
+      "id": "ARG_USA_chem",
+      "source": "ARG_ref",
+      "target": "USA_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium carbonate",
+      "volume_lce_kt": 6,
+      "volume_uncertainty_pct": 15,
+      "share_of_source_exports_pct": 30,
+      "policy_state": "ambiguous",
+      "policy_tags": ["rio_tinto_chinalco_14.99pct", "critical_minerals_agreement_2023"],
+      "note": "**Major correction from v0.1 (was 48.8 kt LCE — 7x overstatement).** Corrected to ~5.9 kt LCE per Query 2: 43% × 3,020 t Li content × 5.323 LCE factor = ~6.9 kt LCE. **Per Query 8: classification moved from 'qualifying' to 'ambiguous' — Rio Tinto Arcadium closed March 2025; Chinalco owns 14.99% of Rio Tinto (below 25% single-owner FIE trigger but vulnerable if aggregate-ownership test adopted in future Treasury rules).** Flow proceeds pending regulatory clarification. Rio Tinto's 200 kt LCE by 2028 ambition depends on §45X eligibility.",
+      "sources": [
+        "USGS MCS 2026 — US Import Sources 2021-24 (Argentina 43%)",
+        "Rio Tinto-Arcadium acquisition March 2025",
+        "Chinalco Rio Tinto shareholding",
+        "IRS Notice 2026-15 — FIE ownership tests pending"
+      ]
+    },
+
+    {
+      "id": "ARG_CHN_chem",
+      "source": "ARG_ref",
+      "target": "CHN_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium carbonate",
+      "volume_lce_kt": 55,
+      "volume_uncertainty_pct": 15,
+      "share_of_source_exports_pct": 50,
+      "policy_state": "blocked",
+      "policy_tags": ["ganfeng_chinese_operator", "blocked_downstream"],
+      "note": "Ganfeng's Cauchari-Olaroz and Mariana operations ship chemicals to Chinese parent. Volume estimate reflects 50% of Argentine refined output × 2024 volume. Part of the 241 kt LCE refined carbonate flowing into Chinese cell production. Even though flow is Argentina-origin, destination is Chinese cells → PFE-blocked for US credit contribution.",
+      "sources": [
+        "Ganfeng Cauchari-Olaroz operational reporting",
+        "China Customs 2024 lithium carbonate imports"
+      ]
+    },
+
+    {
+      "id": "ARG_KOR_chem",
+      "source": "ARG_ref",
+      "target": "KOR_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium carbonate",
+      "volume_lce_kt": 10,
+      "volume_uncertainty_pct": 15,
+      "share_of_source_exports_pct": 13,
+      "policy_state": "qualifying",
+      "policy_tags": ["posco_salta_offtake"],
+      "note": "POSCO-Salta and Allkem offtake flows. Feeds Korean cathode ecosystem. Qualifying via US-Korea FTA; Argentina source is ambiguous at absolute level but flow-to-Korea path is clean.",
+      "sources": ["POSCO 2024 annual report — Salta brine project"]
+    },
+
+    {
+      "id": "ZWE_CHN_ore",
+      "source": "ZWE",
+      "target": "CHN_ref",
+      "tier_transition": "mining→refining",
+      "commodity": "spodumene concentrate (post-beneficiation, subject to regime flux)",
+      "volume_lce_kt": 105,
+      "volume_uncertainty_pct": 20,
+      "share_of_source_exports_pct": 90,
+      "policy_state": "blocked_once_refined",
+      "policy_tags": ["zimbabwe_regime_escalating", "all_operators_chinese_except_zulu", "regulatory_flux_2026"],
+      "note": "**The Zimbabwe paradox intensified.** 2024 volume from USGS 22,000 t Li × 5.323 = 117 kt LCE, adjusted for operational disruptions and export routing = ~105 kt LCE. All operators Chinese-owned (Bikita=Sinomine, Arcadia=Huayou, Sabi Star=Chengxin) EXCEPT Zulu (Premier African Minerals UK-listed, Canmax 13% equity). **Regulatory escalation in real time:** Dec 2022 raw ore ban → June 2025 concentrate ban announcement → Feb 25 2026 immediate suspension of all concentrate exports → April 2026 quota system with processing-commitment conditions. 2026 tiered export tax: 10% raw ore, 10% concentrate, 0% lithium sulphate — explicit value-addition policy. Chinese operators being forced downstream.",
+      "sources": [
+        "Zimbabwe SI 213 of 2022",
+        "USGS MCS 2025 (Zimbabwe 22,000 t Li)",
+        "Reuters Feb 25 2026 — suspension",
+        "Reuters April 8 2026 — quota system",
+        "African Climate Wire March 2026 — tiered export tax"
+      ]
+    },
+
+    {
+      "id": "BRA_CHN_ore",
+      "source": "BRA",
+      "target": "CHN_ref",
+      "tier_transition": "mining→refining",
+      "commodity": "spodumene concentrate",
+      "volume_lce_kt": 42,
+      "volume_uncertainty_pct": 15,
+      "share_of_source_exports_pct": 80,
+      "policy_state": "blocked_once_refined",
+      "policy_tags": ["sigma_lithium_brazil", "no_us_brazil_fta"],
+      "note": "Sigma Lithium Grota do Cirilo concentrate ships predominantly to China. 2024 volume nearly doubled from 2023 (USGS MCS 2025). BYD + LG Energy Solution offtake arrangements forming. Brazilian government $2.1bn by 2030 investment in domestic capacity.",
+      "sources": ["Sigma Lithium offtake arrangements 2024", "USGS MCS 2025"]
+    },
+
+    {
+      "id": "BRA_USA_ore",
+      "source": "BRA",
+      "target": "USA_cell",
+      "tier_transition": "mining→cells",
+      "commodity": "spodumene concentrate (LGES offtake, routed through Korean refining)",
+      "volume_lce_kt": 7,
+      "volume_uncertainty_pct": 20,
+      "share_of_source_exports_pct": 14,
+      "policy_state": "pending_regs",
+      "policy_tags": ["no_us_brazil_fta", "pending_treasury_guidance"],
+      "note": "Small but strategically important. Sigma-LGES MOU 2024 for direct supply to North American gigafactories via Korean refining (LGES is Korean, US-FTA qualifying). **Per Query 8: Brazil has no US FTA, so 30D qualifying status depends on MACR-threshold interpretation not yet operationalized — classified 'pending_regs'.** Flow volume is growing but uncertain.",
+      "sources": [
+        "Sigma-LGES MOU 2024",
+        "US-Brazil absence of FTA",
+        "IRS Notice 2026-15 MACR framework (cost tables pending end-2026)"
+      ]
+    },
+
+    {
+      "id": "CAN_BECANCOUR_ore",
+      "source": "CAN_mine",
+      "target": "CAN_ref_becancour",
+      "tier_transition": "mining→refining",
+      "commodity": "spodumene (Whabouchi integrated)",
+      "volume_lce_kt": 18,
+      "volume_uncertainty_pct": 20,
+      "share_of_source_exports_pct": 80,
+      "policy_state": "qualifying",
+      "policy_tags": ["usmca_qualifying"],
+      "note": "Nemaska Lithium vertically integrated Whabouchi mine → Bécancour hydroxide plant. Canada-US FTA (USMCA) qualifying. Ramp-up 2024-2025; 2024 actual output modest per plant-level estimate.",
+      "sources": [
+        "Nemaska Lithium / Arcadium partnership filings",
+        "USGS MCS 2025 Canada production"
+      ]
+    },
+
+    {
+      "id": "USA_USA_ref",
+      "source": "USA_mine",
+      "target": "USA_ref",
+      "tier_transition": "mining→refining",
+      "commodity": "brine-to-chemical (Silver Peak)",
+      "volume_lce_kt": 20,
+      "volume_uncertainty_pct": 15,
+      "share_of_source_exports_pct": 75,
+      "policy_state": "qualifying",
+      "policy_tags": ["fully_domestic_pfe_clean"],
+      "note": "Albemarle Silver Peak brine → Kings Mountain and Silver Peak carbonate. Small but PFE-qualifying throughout. USGS withholds precise figures.",
+      "sources": [
+        "USGS MCS 2025 — US production withheld",
+        "Albemarle Silver Peak operational reporting"
+      ]
+    },
+
+    {
+      "id": "NAM_CHN_ore",
+      "source": "NAM",
+      "target": "CHN_ref",
+      "tier_transition": "mining→refining",
+      "commodity": "spodumene/lepidolite concentrate",
+      "volume_lce_kt": 11,
+      "volume_uncertainty_pct": 25,
+      "share_of_source_exports_pct": 75,
+      "policy_state": "blocked_once_refined",
+      "policy_tags": ["chinese_operator_xinfeng"],
+      "note": "Xinfeng Investments (Chinese) operates largest Namibian lithium operations. Similar structural pattern to Zimbabwe — nominal export restriction regime but Chinese ownership routes concentrate to Chinese refining.",
+      "sources": [
+        "Namibian Ministry of Mines export controls June 2023",
+        "Xinfeng Investments operational reporting"
+      ]
+    },
+
+    "// ═══════════ REFINING → CELLS (INTRA-COUNTRY AND CROSS-BORDER) ═══════════",
+
+    {
+      "id": "CHN_CHN_chem",
+      "source": "CHN_ref",
+      "target": "CHN_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium chemicals (domestic integrated)",
+      "volume_lce_kt": 650,
+      "volume_uncertainty_lce_kt_range": [580, 720],
+      "policy_state": "blocked",
+      "policy_tags": ["largest_single_flow", "net_importer_context"],
+      "note": "**Largest single flow in the system — 4x larger than next-biggest.** Corrected to range 580-720 kt LCE per Query 1 mass balance reconciliation (central estimate 650). Uncertainty reflects 2024 inventory build during price crash (~100-200 kt LCE accumulated). **Critical context: China was NET IMPORTER of refined lithium in 2024 despite 70% refining share.** Chinese cell plants also received ~240 kt LCE of imported refined carbonate from Chile/Argentina — that flow is captured separately in CHL_CHN_chem and ARG_CHN_chem. Chokepoint is processing concentration, not self-sufficiency.",
+      "sources": [
+        "MIIT/CABIA Feb 2025 release — 691 kt Li2CO3 + 354 kt LiOH",
+        "IEA Global Critical Minerals Outlook 2025 — 70% refining share",
+        "China Customs 2024 — 235 kt Li2CO3 imports",
+        "SMM/Mysteel inventory data 2024"
+      ]
+    },
+
+    {
+      "id": "CHN_KOR_chem",
+      "source": "CHN_ref",
+      "target": "KOR_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium chemicals / CAM precursor",
+      "volume_lce_kt": 45,
+      "volume_uncertainty_pct": 15,
+      "share_of_source_exports_pct": 41,
+      "policy_state": "blocked_once_refined",
+      "policy_tags": ["china_nov_2025_export_controls_affect"],
+      "note": "Korean cell makers source significant share of lithium chemicals from China despite domestic POSCO ramp-up efforts. Affected by China's Nov 2025 battery technology export controls (technical transfer more than volume, but material for Korean planning).",
+      "sources": [
+        "Korean Ministry of Trade battery supply chain data",
+        "IEA Oct 2025 commentary on China Nov 2025 export controls"
+      ]
+    },
+
+    {
+      "id": "CHN_JPN_chem",
+      "source": "CHN_ref",
+      "target": "JPN_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium chemicals / CAM precursor",
+      "volume_lce_kt": 22,
+      "volume_uncertainty_pct": 15,
+      "share_of_source_exports_pct": 20,
+      "policy_state": "blocked_once_refined",
+      "policy_tags": [],
+      "note": "Japanese cell makers (Panasonic) source from China for NMC chemistry feedstock. Smaller than Korean equivalent.",
+      "sources": ["Japanese Ministry of Economy supply chain data"]
+    },
+
+    {
+      "id": "CHN_EU_chem",
+      "source": "CHN_ref",
+      "target": "HUN_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium chemicals / CAM precursor",
+      "volume_lce_kt": 25,
+      "volume_uncertainty_pct": 20,
+      "share_of_source_exports_pct": 23,
+      "policy_state": "eu_crma",
+      "policy_tags": ["crma_65pct_ceiling_from_2030", "catl_debrecen_destination"],
+      "note": "Chinese chemicals flow to EU cell plants, with Hungary as proxy destination (CATL Debrecen + Samsung SDI Göd + SK On clusters). CRMA 65% third-country ceiling creates long-term pressure from 2030 but no current constraint. Encodes as HUN in atlas but represents EU-wide flow. CATL Debrecen mass cell production starts early 2026.",
+      "sources": [
+        "EU CRMA — 65% third-country supply threshold from 2030",
+        "CATL Debrecen gigafactory reporting Dec 2025"
+      ]
+    },
+
+    {
+      "id": "CHN_USA_chem",
+      "source": "CHN_ref",
+      "target": "USA_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium chemicals",
+      "volume_lce_kt": 6,
+      "volume_uncertainty_pct": 25,
+      "share_of_source_exports_pct": 5.5,
+      "policy_state": "blocked",
+      "policy_tags": ["pfe_explicit_block", "declining_volume"],
+      "note": "**The defining blocked flow.** Pre-IRA this was a significant route. Under OBBBA PFE rules + 30D FEOC, Chinese-refined lithium in US-credit-eligible batteries is disqualified. Volume has dropped since 2023 and continues to decline as developers restructure. Rendered in atlas as dashed policy-blue flow line. Ford/CATL Marshall licensing arrangement is the notable exception — codified 'Ford controls; CATL merely trains' distinction survived OBBBA final revisions.",
+      "sources": [
+        "OBBBA Section 45X PFE rules, July 4 2025",
+        "IRS Notice 2026-15 — Feb 12 2026 MACR framework",
+        "Ford BlueOval Marshall MI arrangement codified in final OBBBA revisions"
+      ]
+    },
+
+    {
+      "id": "KOR_KOR_chem",
+      "source": "KOR_ref_gwangyang",
+      "target": "KOR_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "POSCO hydroxide → Korean cells",
+      "volume_lce_kt": 6,
+      "volume_uncertainty_pct": 30,
+      "share_of_source_exports_pct": 70,
+      "policy_state": "qualifying",
+      "policy_tags": ["posco_ramp_gap_reality"],
+      "note": "POSCO Gwangyang → LG/Samsung/SK On. Korea-US FTA qualifying. **Volume reflects POSCO ramp reality: only ~8 kt total 2024 output at Gwangyang, of which majority consumed domestically.** Growing flow but small in absolute terms.",
+      "sources": [
+        "POSCO Gwangyang operations",
+        "Fastmarkets Nov 2024 production data"
+      ]
+    },
+
+    {
+      "id": "DEU_DEU_chem",
+      "source": "DEU_ref_bitterfeld",
+      "target": "DEU_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "AMG Bitterfeld hydroxide (limited 2024 output)",
+      "volume_lce_kt": 2,
+      "volume_uncertainty_pct": 30,
+      "share_of_source_exports_pct": 100,
+      "policy_state": "eu_crma",
+      "policy_tags": ["crma_strategic_project", "europe_nascent_capacity"],
+      "note": "AMG Bitterfeld Module 1 (20 kt/y) commissioned September 2024. Limited 2024 output. EU CRMA Strategic Project. Represents European refining ambition, but still ~1% of global. Rock Tech Guben converter under construction, production expected 2026.",
+      "sources": [
+        "AMG Critical Materials press release Sept 2024",
+        "EU CRMA Strategic Project list 2024"
+      ]
+    },
+
+    {
+      "id": "JPN_JPN_chem",
+      "source": "JPN_ref_naraha",
+      "target": "JPN_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "Naraha + Toyotsu hydroxide (Argentine carbonate feedstock)",
+      "volume_lce_kt": 9,
+      "volume_uncertainty_pct": 20,
+      "share_of_source_exports_pct": 90,
+      "policy_state": "ambiguous",
+      "policy_tags": ["japan_no_fta_pfe_ambiguous"],
+      "note": "Naraha (Rio Tinto/Toyota Tsusho, 10 kt/y, operational 2023) + Toyotsu operations. Feedstock imported from Argentina. Japan-US relationship close but no FTA — PFE classification ambiguous pending Treasury interpretation of ally-based cases.",
+      "sources": [
+        "Rio Tinto Naraha reporting",
+        "Toyota Tsusho Integrated Report 2024"
+      ]
+    },
+
+    {
+      "id": "USA_USA_cells",
+      "source": "USA_ref",
+      "target": "USA_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "domestic integration",
+      "volume_lce_kt": 18,
+      "volume_uncertainty_pct": 15,
+      "share_of_source_exports_pct": 90,
+      "policy_state": "qualifying",
+      "policy_tags": ["fully_pfe_clean"],
+      "note": "Tesla Nevada, Georgia SK On, Michigan LG, Indiana StarPlus operations partly fed by Albemarle domestic chemicals. Small absolute terms but fully PFE-qualifying. Growing through 2025 with StarPlus ramping.",
+      "sources": ["BNEF/IEA US cell capacity tracking 2024-2025"]
+    },
+
+    {
+      "id": "USA_INDIANA_cells",
+      "source": "USA_ref",
+      "target": "USA_cell_indiana",
+      "tier_transition": "refining→cells",
+      "commodity": "US-refined chemicals → Indiana cells",
+      "volume_lce_kt": 4,
+      "volume_uncertainty_pct": 25,
+      "policy_state": "qualifying",
+      "policy_tags": ["ally_shoring_template"],
+      "note": "Stellantis-Samsung SDI JV Plant 1 at Kokomo operational 2025. Fully PFE-qualifying: Samsung (Korea FTA), Stellantis (Italian-French-Dutch). Represents template for 'ally-shoring' JV structure that sidesteps OBBBA PFE while leveraging Korean cell technology + US market access.",
+      "sources": ["Stellantis-Samsung Kokomo JV", "StarPlus Energy reporting"]
+    },
+
+    {
+      "id": "CAN_CELLS_chem",
+      "source": "CAN_ref_becancour",
+      "target": "CAN_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "Bécancour hydroxide → NextStar Windsor",
+      "volume_lce_kt": 2,
+      "volume_uncertainty_pct": 30,
+      "share_of_source_exports_pct": 40,
+      "policy_state": "qualifying",
+      "policy_tags": ["usmca_qualifying"],
+      "note": "Small volume but fully integrated USMCA supply chain. NextStar Windsor (LGES sole owner from Feb 2026) now serving both EV cell and BESS markets.",
+      "sources": ["NextStar Energy corporate reporting", "Nemaska Lithium 2024 output"]
+    },
+
+    {
+      "id": "CHN_CAN_chem",
+      "source": "CHN_ref",
+      "target": "CAN_cell",
+      "tier_transition": "refining→cells",
+      "commodity": "lithium chemicals",
+      "volume_lce_kt": 2,
+      "volume_uncertainty_pct": 30,
+      "share_of_source_exports_pct": 1.8,
+      "policy_state": "blocked",
+      "policy_tags": ["pfe_blocked_small_volume"],
+      "note": "Small residual flow to Canadian assembly (NextStar Windsor) from Chinese chemicals. PFE-blocked for §45X/30D credit eligibility but plants continue operational. Volume declining as Canada→Bécancour vertical integration ramps.",
+      "sources": ["NextStar Windsor commissioning 2025"]
+    }
+
+  ],
+
+  "__flow_summary_by_tier_and_state": {
+    "total_flows": 31,
+    "by_tier_transition": {
+      "mining_to_refining": 14,
+      "refining_to_cells": 15,
+      "mining_to_cells_direct": 2
+    },
+    "by_policy_state": {
+      "qualifying": 10,
+      "blocked": 7,
+      "blocked_once_refined": 7,
+      "ambiguous": 2,
+      "pending_regs": 1,
+      "eu_crma": 3,
+      "cross_tagged_multiple": 1
+    }
+  },
+
+  "__key_reconciliation_vs_v0.1": [
+    "ARG_USA_chem: 48.8 → 5.9 kt LCE (7x correction per Query 2)",
+    "CHN_CHN_chem: point estimate 720 → range 580-720 kt (central 650) per Query 1",
+    "AUS_KWINANA_ore: policy state qualifying → BLOCKED (per Query 8 SFE classification)",
+    "ARG_USA_chem: policy state qualifying → ambiguous (Rio Tinto Chinalco 14.99% exposure)",
+    "BRA_USA_ore: policy state ambiguous → pending_regs (no FTA, MACR thresholds pending)",
+    "AUS_IDN_ore: policy state previously not tagged → blocked_once_refined (Chengxin China-controlled)",
+    "Korea-Chile flow: reframed with POSCO ramp gap context — substitution aspirational not achieved",
+    "Zimbabwe flow: annotated with Feb 2026/April 2026 regulatory escalation",
+    "CHL period citation: H1 2025 → Jan-Sep 2025 on Mysteel Australia share data",
+    "China refining share: 65% → 70% per IEA GCMO 2025, corrected throughout",
+    "All cell manufacturing volumes corrected per Query 6 (China 2,450 GWh / 85%, US 185, Hungary 35, France 13, Sweden 0, Canada 5)"
+  ],
+
+  "__critical_unresolved_items_for_build": [
+    "Ford/CATL Michigan licensing arrangement: not rendered as distinct flow since it's a technology licensing relationship, not a lithium flow. Consider adding as a 'technology transfer' annotation on the Michigan node.",
+    "Korean retreat from Chile: flow CHL_KOR_chem is annotated but the *trend* (declining share) is not visually captured. Consider time-series option for future version.",
+    "Inventory build: 100-200 kt LCE accumulated 2024 is not a 'flow' but is material. Currently embedded in CHN_CHN range only. Could add as annotation on CHN_cell node.",
+    "Ambiguous/pending_regs states: need distinct visual treatment in overlay JSON (suggest: dashed line for blocked, dotted for ambiguous, dashed with question-mark marker for pending_regs).",
+    "NovAndino Litio JV (Codelco-SQM, operational Dec 27 2025): not explicitly represented as separate node; folded into CHL/CHL_ref. Could be added as production milestone annotation."
+  ]
+
+}
