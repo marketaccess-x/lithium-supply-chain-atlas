@@ -834,12 +834,12 @@ function nodeRadius(node) {
   if (node.tier === "mining") v = node.production_2024_kt_lce || 0;
   else if (node.tier === "refining") v = node.output_2024_kt_lce || node.plant_actual_2024_kt_lce || 0;
   else v = node.operational_capacity_2025_gwh || 0;
-  if (!v) return 4;
-  // Square-root scaling with sensible bounds
+  if (!v) return 3.5;
+  // Square-root scaling with tightened caps so China doesn't visually dominate
   if (node.tier === "cells") {
-    return Math.max(4, Math.min(24, Math.sqrt(v) * 0.55));
+    return Math.max(3.5, Math.min(17, Math.sqrt(v) * 0.42));
   }
-  return Math.max(4, Math.min(22, Math.sqrt(v) * 0.9));
+  return Math.max(3.5, Math.min(16, Math.sqrt(v) * 0.65));
 }
 
 function tierColor(tier) {
