@@ -327,14 +327,14 @@
   /* Self-loop pulsing ring (domestic flows rendered as rings) */
   .self-loop-ring {
     fill: none;
-    stroke: var(--c-neutral);
-    stroke-width: 1.5;
-    pointer-events: none;
+    stroke: #4a7db8;
+    stroke-width: 2.5;
+    pointer-events: stroke;
     animation: selfPulse 2.5s ease-in-out infinite;
   }
   @keyframes selfPulse {
-    0%,100% { opacity: 0.25; stroke-width: 1.5; }
-    50%     { opacity: 0.6;  stroke-width: 2.5; }
+    0%,100% { opacity: 0.55; }
+    50%     { opacity: 0.95; }
   }
 
   /* ── FLOWS ── */
@@ -347,6 +347,13 @@
   }
   .flow-line.faded { opacity: 0.1 !important; }
   .flow-line:hover { opacity: 1 !important; }
+  .flow-line.pulse-escalating {
+    animation: flowPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes flowPulse {
+    0%,100% { opacity: 0.55; }
+    50%     { opacity: 1;    }
+  }
 
   /* ── TOOLTIP ── */
   .tooltip {
@@ -795,8 +802,11 @@ function isOnFrontHemisphere(coords) {
   return d3.geoDistance(coords, centre) < Math.PI / 2;
 }
 
-function shortName(name) {
-  return name.replace(/\s*\(.*?\)/g, "").replace(" mining","").replace(" refining","").replace(" (refining)","");
+function shortName(node) {
+  if (typeof node === "string") {
+    return node.replace(/\s*\(.*?\)/g, "").trim();
+  }
+  return (node.display_label || node.name || "").replace(/\s*\(.*?\)/g, "").trim();
 }
 
 // ─── NODE SIZING (ring-stack per tier presence) ─────────────────
@@ -886,24 +896,29 @@ function flowStroke(flow) {
   const tag = FLOW_TAGS[flow.id];
   if (!tag) return "var(--c-neutral)";
 
-  // Determine primary active overlay
   const primary = tag.primary_state;
+  const secondary = tag.secondary_states || [];
   const overlays = tag.overlays || [];
 
-  // Priority: PFE > host > CRMA
+  // Priority order: most specific active overlay wins
+  // US PFE takes priority when active (it's the most common primary state)
   if (activeOverlays.us_pfe_regime && overlays.includes("us_pfe_regime")) {
-    if (primary === "qualifying") return "var(--c-pfe)";
-    if (primary === "blocked") return "var(--c-pfe)";
-    if (primary === "blocked_once_refined") return "url(#grad-pfe)";
-    if (primary === "ambiguous") return "var(--c-pfe)";
-    if (primary === "pending_regs") return "var(--c-pfe)";
+    // Special case: blocked_once_refined uses gradient
+    if (primary === "blocked_once_refined") return "url(#grad-pfe-" + flow.id + ")";
+    return "var(--c-pfe)";
   }
+
+  // Host-State when PFE off or not applicable
   if (activeOverlays.host_state_controls && overlays.includes("host_state_controls")) {
     return "var(--c-host)";
   }
+
+  // EU CRMA when PFE + Host off or not applicable
+  // Handles: strategic_project, subject_to_65pct_ceiling, demand_side_undermined
   if (activeOverlays.eu_crma && overlays.includes("eu_crma")) {
     return "var(--c-crma)";
   }
+
   return "var(--c-neutral)";
 }
 
@@ -911,12 +926,31 @@ function flowDashArray(flow) {
   const tag = FLOW_TAGS[flow.id];
   if (!tag) return null;
   const primary = tag.primary_state;
+
   if (activeOverlays.us_pfe_regime && tag.overlays?.includes("us_pfe_regime")) {
-    if (primary === "blocked") return "5,3";
-    if (primary === "ambiguous") return "2,3";
-    if (primary === "pending_regs") return "5,5";
+    if (primary === "blocked") return "6,4";
+    if (primary === "ambiguous") return "2,4";
+    if (primary === "pending_regs") return "6,6";
+  }
+  // Host-state: escalating gets animated dash (fallback to dashed)
+  if (activeOverlays.host_state_controls && tag.overlays?.includes("host_state_controls")) {
+    const sec = tag.secondary_states || [];
+    if (sec.includes("escalating") || primary === "escalating") return "5,4";
   }
   return null;
+}
+
+// Detect if flow should pulse (escalating host-state)
+function flowIsPulsing(flow) {
+  const tag = FLOW_TAGS[flow.id];
+  if (!tag) return false;
+  const sec = tag.secondary_states || [];
+  if (activeOverlays.host_state_controls &&
+      tag.overlays?.includes("host_state_controls") &&
+      (sec.includes("escalating") || tag.primary_state === "escalating")) {
+    return true;
+  }
+  return false;
 }
 
 function flowWidth(flow) {
@@ -1000,7 +1034,8 @@ function updateFlowStyling() {
     .attr("stroke", d => flowStroke(d))
     .attr("stroke-dasharray", d => flowDashArray(d))
     .attr("stroke-width", d => flowWidth(d))
-    .attr("opacity", d => flowOpacity(d));
+    .attr("opacity", d => flowOpacity(d))
+    .classed("pulse-escalating", d => flowIsPulsing(d));
 }
 
 // ─── MAIN RENDER ────────────────────────────────────────────────
@@ -1037,14 +1072,27 @@ Promise.all([
 });
 
 function buildScene() {
-  // Gradient defs (for blocked-once-refined flows)
+  // Gradient defs (per-flow gradients for blocked-once-refined flows)
   const defs = svg.append("defs");
 
-  const grad = defs.append("linearGradient")
+  // Fallback shared gradient
+  const fallbackGrad = defs.append("linearGradient")
     .attr("id", "grad-pfe")
     .attr("gradientUnits", "userSpaceOnUse");
-  grad.append("stop").attr("offset", "0%").attr("stop-color", "#7a8599");
-  grad.append("stop").attr("offset", "100%").attr("stop-color", "#4a7db8");
+  fallbackGrad.append("stop").attr("offset", "0%").attr("stop-color", "#7a8599");
+  fallbackGrad.append("stop").attr("offset", "100%").attr("stop-color", "#4a7db8");
+
+  // Per-flow gradients for blocked_once_refined — orientation updates in redraw()
+  FLOWS.forEach(f => {
+    const tag = FLOW_TAGS[f.id];
+    if (tag?.primary_state === "blocked_once_refined") {
+      const g = defs.append("linearGradient")
+        .attr("id", `grad-pfe-${f.id}`)
+        .attr("gradientUnits", "userSpaceOnUse");
+      g.append("stop").attr("offset", "0%").attr("stop-color", "#7a8599");
+      g.append("stop").attr("offset", "100%").attr("stop-color", "#4a7db8");
+    }
+  });
 
   // Sphere + graticule
   svg.append("path")
@@ -1084,6 +1132,7 @@ function buildScene() {
     .attr("stroke-width", d => flowWidth(d))
     .attr("opacity", d => flowOpacity(d))
     .attr("fill", "none")
+    .classed("pulse-escalating", d => flowIsPulsing(d))
     .on("mouseover", function(event, d) {
       d3.select(this).attr("opacity", 1).attr("stroke-width", flowWidth(d) * 1.4);
       flowLines.filter(f => f.id !== d.id).classed("faded", true);
@@ -1096,23 +1145,7 @@ function buildScene() {
       hideTooltip();
     });
 
-  // ── SELF-LOOPS (intra-country flows) ──────────────────────────
-  const selfLoopFlows = FLOWS.filter(isSelfLoop);
-  const selfLoopG = svg.append("g").attr("class", "self-loops");
-
-  selfLoopRings = selfLoopG.selectAll("circle")
-    .data(selfLoopFlows, d => d.id)
-    .join("circle")
-    .attr("class", "self-loop-ring")
-    .attr("r", d => Math.max(10, Math.sqrt(d.volume_lce_kt || 10) * 0.7))
-    .attr("stroke-width", d => Math.max(1.5, Math.sqrt(d.volume_lce_kt || 10) * 0.12))
-    .style("cursor", "pointer")
-    .style("pointer-events", "stroke")
-    .on("mouseover", function(event, d) {
-      showFlowTooltip(event, d);
-    })
-    .on("mousemove", (e) => moveTooltip(e))
-    .on("mouseout", hideTooltip);
+  // ── (self-loops rendered AFTER nodes to appear on top) ──
 
   // ── NODES ─────────────────────────────────────────────────────
   const nodesG = svg.append("g").attr("class", "nodes");
@@ -1148,11 +1181,50 @@ function buildScene() {
       hideTooltip();
     });
 
-  // Label
+  // Label — only show on the 'primary' node at each coord to avoid duplicate labels
+  // Primary = largest-volume node among those sharing a coord
+  const coordKey = d => `${Math.round(d.coords[0])}|${Math.round(d.coords[1])}`;
+  const primaryNodeIds = new Set();
+  const groupByCoord = d3.group(NODES_RAW, coordKey);
+  groupByCoord.forEach(nodes => {
+    const primary = nodes.reduce((best, n) => {
+      const v = n.production_2024_kt_lce || n.output_2024_kt_lce || n.plant_actual_2024_kt_lce || n.operational_capacity_2025_gwh || 0;
+      const bv = best.production_2024_kt_lce || best.output_2024_kt_lce || best.plant_actual_2024_kt_lce || best.operational_capacity_2025_gwh || 0;
+      return v > bv ? n : best;
+    });
+    primaryNodeIds.add(primary.id);
+  });
+
   nodeGroups.append("text")
     .attr("class", "node-label")
     .attr("dy", d => -(nodeRadius(d) + 6))
-    .text(d => shortName(d.name));
+    .text(d => primaryNodeIds.has(d.id) ? shortName(d) : "");
+
+  // ── SELF-LOOPS (rendered ON TOP of nodes so they're always visible) ──
+  const selfLoopFlows = FLOWS.filter(isSelfLoop);
+  const selfLoopG = svg.append("g").attr("class", "self-loops");
+
+  selfLoopRings = selfLoopG.selectAll("circle")
+    .data(selfLoopFlows, d => d.id)
+    .join("circle")
+    .attr("class", "self-loop-ring")
+    .attr("r", d => {
+      // Ring extends well beyond the largest node at that coord
+      const src = NODES[d.source];
+      const maxNodeRadius = Math.max(
+        nodeRadius(src),
+        ...NODES_RAW.filter(n => Math.abs(n.coords[0] - src.coords[0]) < 1 && Math.abs(n.coords[1] - src.coords[1]) < 1).map(nodeRadius)
+      );
+      return maxNodeRadius + 12 + Math.sqrt(d.volume_lce_kt || 10) * 0.3;
+    })
+    .attr("stroke-width", d => Math.max(2, Math.sqrt(d.volume_lce_kt || 10) * 0.1))
+    .style("cursor", "pointer")
+    .style("pointer-events", "stroke")
+    .on("mouseover", function(event, d) {
+      showFlowTooltip(event, d);
+    })
+    .on("mousemove", (e) => moveTooltip(e))
+    .on("mouseout", hideTooltip);
 
   updateNodeMarkers();
   redraw();
@@ -1167,28 +1239,18 @@ function redraw() {
 
   if (flowLines) flowLines.attr("d", d => globeFlowPath(d));
 
-  // Update gradient direction to follow each flow's source→target screen-space
-  // (Single shared gradient — orientation approximated in userSpaceOnUse)
-  // For correctness with blocked_once_refined flows, use per-flow gradients below
+  // Update per-flow gradient orientations to follow source→target screen direction
   svg.selectAll(".flow-line").each(function(d) {
     if (FLOW_TAGS[d.id]?.primary_state === "blocked_once_refined") {
       const src = NODES[d.source];
       const tgt = NODES[d.target];
-      if (src && tgt && isOnFrontHemisphere(src.coords) && isOnFrontHemisphere(tgt.coords)) {
+      if (src && tgt) {
         const p1 = projection(src.coords);
         const p2 = projection(tgt.coords);
-        if (p1 && p2) {
-          let gid = `grad-${d.id}`;
-          let grad = svg.select(`#${gid}`);
-          if (grad.empty()) {
-            grad = svg.select("defs").append("linearGradient")
-              .attr("id", gid)
-              .attr("gradientUnits", "userSpaceOnUse");
-            grad.append("stop").attr("offset","0%").attr("stop-color","#7a8599");
-            grad.append("stop").attr("offset","100%").attr("stop-color","#4a7db8");
-          }
+        const gid = `grad-pfe-${d.id}`;
+        const grad = svg.select(`#${gid}`);
+        if (!grad.empty() && p1 && p2) {
           grad.attr("x1", p1[0]).attr("y1", p1[1]).attr("x2", p2[0]).attr("y2", p2[1]);
-          d3.select(this).attr("stroke", `url(#${gid})`);
         }
       }
     }
