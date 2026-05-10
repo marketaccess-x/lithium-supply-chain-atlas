@@ -104,6 +104,13 @@
     border-radius: 3px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .brand-tag:hover {
+    color: #6ab0e5;
+    border-color: rgba(74,125,184,0.65);
   }
   .header-btn {
     display: flex;
@@ -562,7 +569,7 @@
     <p>MINING · REFINING · CELL MFG · POLICY EXPOSURE OVERLAYS</p>
   </div>
   <div class="header-right">
-    <span class="brand-tag">Market Access X</span>
+    <a class="brand-tag" href="https://marketaccess-x.com/" rel="noopener">Market Access X</a>
     <a class="header-btn" href="https://marketaccess-x.com/#strategic-analysis" target="_blank" rel="noopener">
       Reports →
     </a>
